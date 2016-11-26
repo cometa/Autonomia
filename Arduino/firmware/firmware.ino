@@ -29,6 +29,7 @@ const int MOTOR_PIN = 10;
 const int SERVO_PIN= 11;
 
 // Globals
+bool debug = false;
 volatile uint8_t updateFlagsShared;
 uint8_t updateFlags;
 const int THROTTLE_FLAG = 1;
@@ -191,7 +192,7 @@ void setup() {
   initActuators();
 
   armActuators();
-  Serial.begin(115200);
+  Serial.begin(38400); //115200);
 }  
 
 void loop() {
@@ -237,10 +238,11 @@ void loop() {
     char ch = (char)Serial.read();
     if (ch == '\n') {
       if (cmdParse(&rc_outputs_steering, &rc_outputs_throttle)) {
-        Serial.print("****");       
-        Serial.print(rc_outputs_steering);       
-        Serial.println(rc_outputs_throttle);       
-
+        if (debug) {
+          Serial.print("****");       
+          Serial.print(rc_outputs_steering);       
+          Serial.println(rc_outputs_throttle);       
+        }
         // output values have changed
         motor.write(rc_outputs_throttle);
         steering.write(rc_outputs_steering);
