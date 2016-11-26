@@ -50,7 +50,7 @@ def input_arduino(arport):
         ch = arport.read(1)
       try:
         # print inputLine.decode('ISO-8859-1')
-        steering_in, throttle_in = inputLine.split()
+        throttle_in, steering_in = inputLine.split()
         return int(steering_in), int(throttle_in)
       except:
         pass
@@ -63,16 +63,16 @@ def output_arduino(arport, steering, throttle):
 
   global cur_steering, cur_throttle
   # set steering to neutral if within an interval around 90
-  steering = 90 if 88 < steering < 92 else steering
+  steering = 90 if 88 < steering < 93 else steering
 
   # send a new steering PWM setting to the controller
   if steering != cur_steering:
-    cur_steering = steering
+    cur_steering = steering   # update global
     arport.write(('S %d\n' % cur_steering).encode('ascii'))
 
   # send a new throttle PWM setting to the controller
   if throttle != cur_throttle:
-    cur_throttle = throttle
+    cur_throttle = throttle   # update global
     arport.write(('M %d\n' % cur_throttle).encode('ascii'))
 
   arport.flush()
