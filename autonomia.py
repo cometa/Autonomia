@@ -63,7 +63,7 @@ def output_arduino(arport, steering, throttle):
 
   global cur_steering, cur_throttle
   # set steering to neutral if within an interval around 90
-  steering = 90 if 88 < steering < 93 else steering
+  steering = 90 if 88 < steering <= 94 else steering
 
   # send a new steering PWM setting to the controller
   if steering != cur_steering:
