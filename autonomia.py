@@ -24,17 +24,37 @@ from runtime import Runtime
 
 import pdb
 
+# vehicle states
+IDLE = 0
+RUNNING = 1
+PAUSE = 2
+
+# vehicle running modes
+NORMAL = 0    # driven by RC remote control or remotely from Cometa
+AUTO = 1      # fully autonomous driving
+
+# options flags
+CAPTURE = False   # capturing video and telemetry for CNN training
+STREAMING = False # streaming video to cloud server
+
+THETA_CENTER = 90
+MOTOR_NEUTRAL = 90
+
 # shortcut to refer to the system log in Runtime
 Runtime.init_runtime()
 syslog = Runtime.syslog
 
-
-# Arduino Nano radio and servo controller setup.
 def setup_arduino():
-  # set serial non-blocking 
-  port = serial.Serial(config['arduino']['serial'], config['arduino']['speed'], timeout=0.1, xonxoff=False, rtscts=False, dsrdtr=False)
-  port.flushInput()
-  port.flushOutput()
+  """ Arduino Nano radio and servo controller setup. """
+
+  try:
+    # set serial non-blocking 
+    port = serial.Serial(config['arduino']['serial'], config['arduino']['speed'], timeout=0.1, xonxoff=False, rtscts=False, dsrdtr=False)
+    port.flushInput()
+    port.flushOutput()
+  except Exception as e:
+    syslog (e)
+    return None
 
   # TODO: remember the heartbeat
   return port
@@ -63,7 +83,7 @@ def output_arduino(arport, steering, throttle):
 
   global cur_steering, cur_throttle
   # set steering to neutral if within an interval around 90
-  steering = 90 if 88 < steering <= 94 else steering
+  steering = 90 if 88 < steering < 92 else steering
 
   # send a new steering PWM setting to the controller
   if steering != cur_steering:
@@ -79,23 +99,36 @@ def output_arduino(arport, steering, throttle):
   return
 
 def main():
+  # pdb.set_trace()
+  
   # Read configuration object
   global config
   config = Runtime.read_config()
+
+  if config == None:
+    # error reading configuration file
+    return
+  verbose = config['app_params']['verbose']
+
   global cur_steering, cur_throttle
 
   # Arduino low-lever controller communication port
   arport = setup_arduino()
+  if arport == None:
+    return
+
   syslog("Arduino setup complete.")
 
+#  print "State %d" % cur_state
   cur_steering, cur_throttle, steering_in, throttle_in = 90, 90, 90, 90
+
   # Application main loop.
   while True:
 
     # get inputs from RC receiver in the [0.180] range
     if arport.inWaiting():
       steering_in, throttle_in = input_arduino(arport)
-      print steering_in, throttle_in 
+      if verbose: print steering_in, throttle_in 
 
     # -- just a pass through as a first test
   
