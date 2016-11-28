@@ -53,6 +53,8 @@ streaming = False   # streaming video to cloud server
 Runtime.init_runtime()
 syslog = Runtime.syslog
 
+TELENAME = 'telemetry.txt'  # used by video streamer
+
 def setup_arduino():
   """ Arduino Nano radio and servo controller setup. """
 
@@ -233,6 +235,10 @@ def main():
     if arport.inWaiting():
       steering_in, throttle_in = input_arduino(arport)
       if verbose: print steering_in, throttle_in 
+
+    f = open('TELENAME','w')
+    f.write('%d %d\n' % steering_in, throttle_in)
+    f.close()
 
     # -- just a pass through as a first test
   
