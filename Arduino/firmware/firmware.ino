@@ -27,6 +27,7 @@ const int THROTTLE_PIN = 4;
 const int STEERING_PIN = 5;
 const int MOTOR_PIN = 10;
 const int SERVO_PIN= 11;
+const int LED_PIN = 13; // the on-board L LED
 
 // Globals
 bool debug = false;
@@ -102,6 +103,8 @@ void throttleISR() {
 void initRCInput() {
   pinMode(THROTTLE_PIN, INPUT_PULLUP);
   pinMode(STEERING_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW); 
   enableInterrupt(THROTTLE_PIN, throttleISR, CHANGE);
   enableInterrupt(STEERING_PIN, steeringISR, CHANGE);
 }
@@ -192,7 +195,7 @@ void setup() {
   initActuators();
 
   armActuators();
-  Serial.begin(38400); //115200);
+  Serial.begin(57600); // 38400);
 }  
 
 void loop() {
