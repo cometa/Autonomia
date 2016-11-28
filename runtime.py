@@ -135,8 +135,9 @@ class Runtime(object):
             	content['cometa']['port'] = int(os.environ['COMETA_PORT'])
             return content
         except Exception as e:
-            print e
-            return ""
+            print "Error in reading file %s" % DCT_FILENAME
+            print e 
+            return None
 
     # Read all DCT
     @classmethod
