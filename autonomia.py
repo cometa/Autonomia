@@ -33,12 +33,17 @@ PAUSE = 2
 NORMAL = 0    # driven by RC remote control or remotely from Cometa
 AUTO = 1      # fully autonomous driving
 
-# options flags
-CAPTURE = False   # capturing video and telemetry for CNN training
-STREAMING = False # streaming video to cloud server
-
 THETA_CENTER = 90
 MOTOR_NEUTRAL = 90
+
+cur_state = IDLE
+cur_mode = NORMAL
+cur_steering = THETA_CENTER
+cur_throttle = MOTOR_NEUTRAL
+
+# options flags
+capture = False     # capturing video and telemetry for CNN training
+streaming = False   # streaming video to cloud server
 
 # shortcut to refer to the system log in Runtime
 Runtime.init_runtime()
@@ -57,26 +62,30 @@ def setup_arduino():
     return None
 
   # TODO: remember the heartbeat
+
+  # wait tha start receiving from the board
+  while port.inWaiting() == 0:
+    time.sleep(0.1)
   return port
 
 def input_arduino(arport):
-    """ Read a line composed of throttle and steering from the Arduino controller. """
+  """ Read a line composed of throttle and steering from the Arduino controller. """
 
-    inputLine = ''
-    if arport.inWaiting():
-      ch = arport.read(1) 
-      while ch != b'\x0A':
-        inputLine += ch
-        ch = arport.read(1)
-      try:
-        # print inputLine.decode('ISO-8859-1')
-        throttle_in, steering_in = inputLine.split()
-        return int(steering_in), int(throttle_in)
-      except:
-        pass
-
-    arport.flush()
-    return cur_steering, cur_throttle
+  global cur_steering, cur_throttle
+  inputLine = ''
+  if arport.inWaiting():
+    ch = arport.read(1) 
+    while ch != b'\x0A':
+      inputLine += ch
+      ch = arport.read(1)
+    try:
+      # print inputLine.decode('ISO-8859-1')
+      t_in, s_in = inputLine.split()
+      return int(s_in), int(t_in)
+    except:
+      pass
+  #arport.flush()
+  return cur_steering, cur_throttle
 
 def output_arduino(arport, steering, throttle):
   """ Write steering and throttle PWM values in the [0,180] range to the Arduino controller. """
@@ -84,7 +93,6 @@ def output_arduino(arport, steering, throttle):
   global cur_steering, cur_throttle
   # set steering to neutral if within an interval around 90
   steering = 90 if 88 < steering < 92 else steering
-
   # send a new steering PWM setting to the controller
   if steering != cur_steering:
     cur_steering = steering   # update global
@@ -95,11 +103,12 @@ def output_arduino(arport, steering, throttle):
     cur_throttle = throttle   # update global
     arport.write(('M %d\n' % cur_throttle).encode('ascii'))
 
-  arport.flush()
+  #arport.flush()
   return
 
 def main():
   # pdb.set_trace()
+  global cur_steering, cur_throttle, cur_state, cur_mode, capture, streaming
   
   # Read configuration object
   global config
@@ -109,19 +118,17 @@ def main():
     # error reading configuration file
     return
   verbose = config['app_params']['verbose']
-
-  global cur_steering, cur_throttle
+  syslog("Configuration: %s" % json.dumps(config))
 
   # Arduino low-lever controller communication port
   arport = setup_arduino()
   if arport == None:
     return
-
   syslog("Arduino setup complete.")
 
-#  print "State %d" % cur_state
-  cur_steering, cur_throttle, steering_in, throttle_in = 90, 90, 90, 90
+  steering_in, throttle_in = cur_steering, cur_throttle
 
+  syslog("Entering application loop.")
   # Application main loop.
   while True:
 
