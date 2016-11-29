@@ -195,7 +195,7 @@ void setup() {
   initActuators();
 
   armActuators();
-  Serial.begin(57600); // 38400);
+  Serial.begin(38400); //57600); // 38400);
 }  
 
 void loop() {
@@ -248,7 +248,9 @@ void loop() {
         }
         // output values have changed
         motor.write(rc_outputs_throttle);
+        delay(15);
         steering.write(rc_outputs_steering);
+        delay(15);
       }
       inputLine = "";
      } else
