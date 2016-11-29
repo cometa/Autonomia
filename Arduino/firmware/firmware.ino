@@ -203,6 +203,8 @@ void loop() {
   static uint8_t rc_outputs_throttle = MOTOR_NEUTRAL;   
   static unsigned long dt;
   static unsigned long t0;
+  static uint8_t last_steeringIn;
+  static uint8_t last_throttleIn;
   unsigned long now;
   uint8_t rc_inputs_steering;
   uint8_t rc_inputs_throttle;
@@ -223,15 +225,18 @@ void loop() {
     rc_inputs_throttle = microseconds2PWM(throttleIn);
     rc_inputs_steering = microseconds2PWM(steeringIn);
 
-    // send readings to the host
-    if (rawOutput) {
-      Serial.print(throttleIn);
-      Serial.print(" ");
-      Serial.println(steeringIn);       
-    } else {
-      Serial.print(rc_inputs_throttle);
-      Serial.print("  "); 
-      Serial.println(rc_inputs_steering);
+    // send readings to the host only when changed
+    if ((1 < abs(last_throttleIn - throttleIn)) || (1 < abs(last_steeringIn - steeringIn))) {
+      // send readings to the host
+      if (rawOutput) {
+        Serial.print(throttleIn);
+        Serial.print(" ");
+        Serial.println(steeringIn);       
+      } else {
+        Serial.print(rc_inputs_throttle);
+        Serial.print("  "); 
+        Serial.println(rc_inputs_steering);
+      }
     }
     t0 = millis();
   }
