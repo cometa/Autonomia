@@ -226,7 +226,7 @@ void loop() {
     rc_inputs_steering = microseconds2PWM(steeringIn);
 
     // send readings to the host only when changed
-    if ((1 < abs(last_throttleIn - throttleIn)) || (1 < abs(last_steeringIn - steeringIn))) {
+    if ((0 < abs(last_throttleIn - throttleIn)) || (0< abs(last_steeringIn - steeringIn))) {
       // send readings to the host
       if (rawOutput) {
         Serial.print(throttleIn);
