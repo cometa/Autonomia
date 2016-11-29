@@ -1,5 +1,6 @@
 The Arduino board controls the steering and motor servos and it allows drive-by-wire by the main on-board computer. It also intercepts and provides the computer board with input data from the RC receiver.
 
+
 ## USB Serial Interface
 ### Input
 Input commands are strings received from the USB port.
@@ -35,3 +36,7 @@ Output to the USB port is a string containing the input from the RC remote contr
 
 > Requirements: 
 > `EnableInterrupt` library
+
+
+## Schematics
+![alt text](https://github.com/cometa/Autonomia/raw/master/docs/sketch.png)
