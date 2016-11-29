@@ -21,6 +21,7 @@ import json
 import serial
 import string
 import sys
+import subprocess
 
 import utils
 from cometalib import CometaClient
@@ -53,7 +54,7 @@ streaming = False   # streaming video to cloud server
 Runtime.init_runtime()
 syslog = Runtime.syslog
 
-TELENAME = 'telemetry.txt'  # used by video streamer
+TELENAME = '/home/pi/telemetry.txt'  # used by video streamer
 
 def setup_arduino():
   """ Arduino Nano radio and servo controller setup. """
@@ -228,21 +229,43 @@ def main():
 
   steering_in, throttle_in = cur_steering, cur_throttle
   syslog("Entering application loop.")
+  last_update = 0.
   # Application main loop.
   while True:
 
     # get inputs from RC receiver in the [0.180] range
-    if arport.inWaiting():
-      steering_in, throttle_in = input_arduino(arport)
-      if verbose: print steering_in, throttle_in 
+    try:
+      if arport.inWaiting():
+        steering_in, throttle_in = input_arduino(arport)
+    except Exception, e:
+      print e,' -- serial port'
+      continue
 
-    f = open('TELENAME','w')
-    f.write('%d %d\n' % steering_in, throttle_in)
-    f.close()
+    # set steering to neutral if within an interval around 90
+    steering_in = 90 if 88 < steering_in < 92 else steering_in
+
+    if verbose: print steering_in, throttle_in 
+
+    if cur_steering == steering_in and cur_throttle == throttle_in:
+      continue
+
+    # update at 15 fps
+    if 0.0667 < time.time() - last_update:
+      s = ('%d %d' % (steering_in, throttle_in))
+      try:
+        f = open('/tmp/telemetry.tmp', 'w', 0)
+        f.write(s)
+        f.close() 
+        s = '/bin/mv /tmp/telemetry.tmp /home/pi/telemetry.txt'
+        subprocess.check_call(s, shell=True)
+      except Exception, e:
+        print e
+        pass
+    last_update = time.time()
 
     # -- just a pass through as a first test
   
-    # set mew values for throttle and steering servos
+    # set new values for throttle and steering servos
     output_arduino(arport, steering_in, throttle_in)
 
 if __name__ == '__main__':
