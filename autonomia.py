@@ -242,15 +242,17 @@ def main():
       continue
 
     # set steering to neutral if within an interval around 90
-    steering_in = 90 if 88 < steering_in < 92 else steering_in
+    steering_in = 90 if 87 <= steering_in < 92 else steering_in
 
     if verbose: print steering_in, throttle_in 
 
     if cur_steering == steering_in and cur_throttle == throttle_in:
+      # like or not we need to avoid a spin loop
+      time.sleep(0.01)
       continue
 
-    # update at 15 fps
-    if 0.0667 < time.time() - last_update:
+    # update at 30 fps
+    if 0.03337 < time.time() - last_update:
       s = ('%d %d' % (steering_in, throttle_in))
       try:
         f = open('/tmp/meta.tmp', 'w', 0)
@@ -267,6 +269,7 @@ def main():
   
     # set new values for throttle and steering servos
     output_arduino(arport, steering_in, throttle_in)
+
 
 if __name__ == '__main__':
   main()
