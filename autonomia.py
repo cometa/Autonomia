@@ -61,7 +61,7 @@ def setup_arduino():
 
   try:
     # set serial non-blocking 
-    port = serial.Serial(config['arduino']['serial'], config['arduino']['speed'], timeout=0.1, xonxoff=False, rtscts=False, dsrdtr=False)
+    port = serial.Serial(config['arduino']['serial'], config['arduino']['speed'], timeout=0.0, xonxoff=False, rtscts=False, dsrdtr=False)
     port.flushInput()
     port.flushOutput()
   except Exception as e:
@@ -253,10 +253,10 @@ def main():
     if 0.0667 < time.time() - last_update:
       s = ('%d %d' % (steering_in, throttle_in))
       try:
-        f = open('/tmp/telemetry.tmp', 'w', 0)
+        f = open('/tmp/meta.tmp', 'w', 0)
         f.write(s)
         f.close() 
-        s = '/bin/mv /tmp/telemetry.tmp /home/pi/telemetry.txt'
+        s = '/bin/mv /tmp/meta.tmp /tmp/meta.txt'
         subprocess.check_call(s, shell=True)
       except Exception, e:
         print e
