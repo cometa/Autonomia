@@ -247,17 +247,19 @@ def main():
     if verbose: print steering_in, throttle_in 
 
     if cur_steering == steering_in and cur_throttle == throttle_in:
-      # like or not we need to avoid a spin loop
+      # like it or not we need to sleep to avoid to hog the CPU in a spin loop
       time.sleep(0.01)
       continue
 
     # update at 30 fps
     if 0.03337 < time.time() - last_update:
       s = ('%d %d' % (steering_in, throttle_in))
+      # create metadata file for embedding steering and throttle values in the video stream
       try:
         f = open('/tmp/meta.tmp', 'w', 0)
         f.write(s)
         f.close() 
+        # use mv that is a system call and not preempted
         s = '/bin/mv /tmp/meta.tmp /tmp/meta.txt'
         subprocess.check_call(s, shell=True)
       except Exception, e:
