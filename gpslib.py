@@ -19,6 +19,9 @@ import serial
 import threading
 import pynmea2
 # https://github.com/Knio/pynmea2
+#
+# Protocol documentation:
+# http://fort21.ru/download/NMEAdescription.pdf
 
 class GPS(object):
   """Receive data from a NMEA compatible GPS """
