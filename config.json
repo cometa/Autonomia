@@ -3,6 +3,7 @@
         "cometa":{"ssl":true, "server":"autonomia.cometa.io", "port": 443, "app_key":"80d25d08e5fa6e13fb0a"},
         "app_params":{"debug":false, "telemetry_period":15, "neutral_delta":2, "verbose": false},
         "arduino":{"serial":"/dev/ttyUSB0", "speed":"57700"},
+        "gps":{"serial":"/dev/ttyACM0", "speed":"19200"},
         "video":{"server":"stream.cometa.io", "port":12345, "auto_start": false, "key":"74DA388EAC6"}
     },
     "service":{"provider":"VE"},
