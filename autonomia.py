@@ -27,6 +27,7 @@ import utils
 from cometalib import CometaClient
 from runtime import Runtime
 from gpslib import GPS
+import api
 
 import pdb
 
@@ -114,65 +115,6 @@ def output_arduino(arport, steering, throttle):
   #arport.flush()
   return
 
-global rpc_methods
-rpc_methods = (#{'name':'rexec','function':_shell}, 
-               #{'name':'video_devices','function':_video_devices},
-)
-
-def message_handler(msg, msg_len):
-    """
-    The generic message handler for Cometa receive callback.
-    Invoked every time the Cometa object receives a JSON-RPC message for this device.
-    It returns the JSON-RPC result object to send back to the application that sent the request.
-    The rpc_methods tuple contains the mapping of names into functions.
-    """
-#    pdb.set_trace()
-    try:
-        req = json.loads(msg)
-    except:
-        # the message is not a json object
-        syslog("Received JSON-RPC invalid message (parse error): %s" % msg, escape=True)
-        return JSON_RPC_PARSE_ERROR
-
-    # check the message is a proper JSON-RPC message
-    ret,id = utils.check_rpc_msg(req)
-    if not ret:
-        if id and utils.isanumber(id):
-            return JSON_RPC_INVALID_PARAMS_FMT_NUM % id
-        if id and isinstance(id, str):
-            return JSON_RPC_INVALID_PARAMS_FMT_STR % id
-        else:
-            return JSON_RPC_PARSE_ERROR
-
-    syslog("JSON-RPC: %s" % msg, escape=True)
-
-    method = req['method']
-    func = None
-    # check if the method is in the registered list
-    for m in rpc_methods:
-        if m['name'] == method:
-            func = m['function']
-            break
-
-    if func == None:
-        return JSON_RPC_INVALID_REQUEST
-
-    # call the method
-    try:
-        result = func(req['params'])
-    except Exception as e:
-        print e
-        return JSON_RPC_INTERNAL_ERROR_FMT_STR % str(id)
-
-    # build the response object
-    reply = {}
-    reply['jsonrpc'] = "2.0"
-    reply['result'] = result
-    reply['id'] = req['id']
-
-    return json.dumps(reply)
-
-
 def main():
   # pdb.set_trace()
   global cur_steering, cur_throttle, cur_state, cur_mode, capture, streaming
@@ -215,7 +157,7 @@ def main():
   com.debug = config['app_params']['debug']
 
   # bind the message_handler() callback
-  com.bind_cb(message_handler)
+  com.bind_cb(api.message_handler)
 
   # Attach the device to Cometa.
   ret = com.attach(device_id, "Autonomia")
@@ -246,7 +188,7 @@ def main():
 
     # per second detection
     if 1 < time.time() - last_second:
-      print "GPS readings", gps.readings
+      # print "GPS readings", gps.readings
       last_second = time.time()
 
     # get inputs from RC receiver in the [0.180] range
