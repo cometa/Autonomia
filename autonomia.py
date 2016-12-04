@@ -26,6 +26,7 @@ import subprocess
 import utils
 from cometalib import CometaClient
 from runtime import Runtime
+from gpslib import GPS
 
 import pdb
 
@@ -186,6 +187,15 @@ def main():
   verbose = config['app_params']['verbose']
   syslog("Configuration: %s" % json.dumps(config))
 
+  # Connect to GPS 
+  if 'gps' in config:
+    gps = GPS()
+    ret = gps.connect(config['gps']['serial'], config['gps']['speed'])
+    if ret:
+      syslog("Connected to GPS.")
+    else:
+      syslog("Error connecting to GPS.")
+
   # Arduino low-lever controller communication port
   arport = setup_arduino()
   if arport == None:
@@ -230,8 +240,14 @@ def main():
   steering_in, throttle_in = cur_steering, cur_throttle
   syslog("Entering application loop.")
   last_update = 0.
+  last_second = 0.
   # Application main loop.
   while True:
+
+    # per second detection
+    if 1 < time.time() - last_second:
+      print "GPS readings", gps.readings
+      last_second = time.time()
 
     # get inputs from RC receiver in the [0.180] range
     try:
@@ -271,6 +287,7 @@ def main():
   
     # set new values for throttle and steering servos
     output_arduino(arport, steering_in, throttle_in)
+
 
 
 if __name__ == '__main__':
