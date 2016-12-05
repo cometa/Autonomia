@@ -22,14 +22,15 @@ import serial
 import string
 import sys
 import subprocess
-
 import utils
 from cometalib import CometaClient
 from runtime import Runtime
 from gpslib import GPS
 import api
+import copy
 
 import pdb
+import car
 
 # vehicle states
 IDLE = 0
@@ -43,20 +44,24 @@ AUTO = 1      # fully autonomous driving
 THETA_CENTER = 90
 MOTOR_NEUTRAL = 90
 
-cur_state = IDLE
-cur_mode = NORMAL
-cur_steering = THETA_CENTER
-cur_throttle = MOTOR_NEUTRAL
+car.state = IDLE
+car.mode = NORMAL
+car.cur_steering = THETA_CENTER
+car.cur_throttle = MOTOR_NEUTRAL
 
 # options flags
-capture = False     # capturing video and telemetry for CNN training
-streaming = False   # streaming video to cloud server
+car.capture = False     # capturing video and telemetry for CNN training
+car.streaming = False   # streaming video to cloud server
 
 # shortcut to refer to the system log in Runtime
 Runtime.init_runtime()
 syslog = Runtime.syslog
 
-TELENAME = '/home/pi/telemetry.txt'  # used by video streamer
+config = Runtime.read_config()
+
+arport = None
+
+TELENAME = '/tmp/meta.txt'  # used by video streamer
 
 def setup_arduino():
   """ Arduino Nano radio and servo controller setup. """
@@ -80,7 +85,7 @@ def setup_arduino():
 def input_arduino(arport):
   """ Read a line composed of throttle and steering from the Arduino controller. """
 
-  global cur_steering, cur_throttle
+#  global cur_steering, car.cur_throttle
   inputLine = ''
   if arport.inWaiting():
     ch = arport.read(1) 
@@ -94,40 +99,54 @@ def input_arduino(arport):
     except:
       pass
   #arport.flush()
-  return cur_steering, cur_throttle
+  return car.cur_steering, car.cur_throttle
 
 def output_arduino(arport, steering, throttle):
   """ Write steering and throttle PWM values in the [0,180] range to the Arduino controller. """
 
-  global cur_steering, cur_throttle
   # set steering to neutral if within an interval around 90
   steering = 90 if 88 < steering < 92 else steering
   # send a new steering PWM setting to the controller
-  if steering != cur_steering:
-    cur_steering = steering   # update global
-    arport.write(('S %d\n' % cur_steering).encode('ascii'))
+  if steering != car.cur_steering:
+    car.cur_steering = steering   # update global
+    arport.write(('S %d\n' % car.cur_steering).encode('ascii'))
 
   # send a new throttle PWM setting to the controller
-  if throttle != cur_throttle:
-    cur_throttle = throttle   # update global
-    arport.write(('M %d\n' % cur_throttle).encode('ascii'))
+  if throttle != car.cur_throttle:
+    car.cur_throttle = throttle   # update global
+    arport.write(('M %d\n' % car.cur_throttle).encode('ascii'))
 
   #arport.flush()
   return
 
+arport = setup_arduino()
+
+def set_steering(val):
+  """ Called by the API to set the steering """
+  output_arduino(arport, val, car.cur_throttle)
+  return
+
 def main():
   # pdb.set_trace()
-  global cur_steering, cur_throttle, cur_state, cur_mode, capture, streaming
-  
+  global steering_in
+
   # Read configuration object
-  global config
-  config = Runtime.read_config()
+#  global config
+#  config = Runtime.read_config()
+  global arport
 
   if config == None:
     # error reading configuration file
     return
   verbose = config['app_params']['verbose']
   syslog("Configuration: %s" % json.dumps(config))
+
+  # Arduino low-lever controller communication port
+  if arport == None:
+    syslog("Error setting up Arduino board.")
+    return
+  else:
+    syslog("Arduino setup complete.")
 
   # Connect to GPS 
   if 'gps' in config:
@@ -137,12 +156,6 @@ def main():
       syslog("Connected to GPS.")
     else:
       syslog("Error connecting to GPS.")
-
-  # Arduino low-lever controller communication port
-  arport = setup_arduino()
-  if arport == None:
-    return
-  syslog("Arduino setup complete.")
 
   # connect to Cometa
   cometa_server = config['cometa']['server']
@@ -179,7 +192,7 @@ def main():
   if com.debug:
       print "Server returned:", ret
 
-  steering_in, throttle_in = cur_steering, cur_throttle
+  steering_in, throttle_in = car.cur_steering, car.cur_throttle
   syslog("Entering application loop.")
   last_update = 0.
   last_second = 0.
@@ -188,23 +201,28 @@ def main():
 
     # per second detection
     if 1 < time.time() - last_second:
-      # print "GPS readings", gps.readings
+      #print "GPS readings", gps.readings
+      # update global GPS readings
+      car.cur_readings = copy.deepcopy(gps.readings)
+      #print cur_readings
       last_second = time.time()
 
-    # get inputs from RC receiver in the [0.180] range
-    try:
-      if arport.inWaiting():
-        steering_in, throttle_in = input_arduino(arport)
-    except Exception, e:
-      print e,' -- serial port'
-      continue
+    # conditional to driving using RC
+    if True:
+      # get inputs from RC receiver in the [0.180] range
+      try:
+        if arport.inWaiting():
+          steering_in, throttle_in = input_arduino(arport)
+      except Exception, e:
+        print e,' -- serial port'
+        continue
 
     # set steering to neutral if within an interval around 90
     steering_in = 90 if 87 <= steering_in < 92 else steering_in
 
     if verbose: print steering_in, throttle_in 
 
-    if cur_steering == steering_in and cur_throttle == throttle_in:
+    if car.cur_steering == steering_in and car.cur_throttle == throttle_in:
       # like it or not we need to sleep to avoid to hog the CPU in a spin loop
       time.sleep(0.01)
       continue
@@ -226,11 +244,11 @@ def main():
     last_update = time.time()
 
     # -- just a pass through as a first test
-  
-    # set new values for throttle and steering servos
-    output_arduino(arport, steering_in, throttle_in)
 
-
+    # conditional to driving using RC
+    if True:
+      # set new values for throttle and steering servos
+      output_arduino(arport, steering_in, throttle_in)
 
 if __name__ == '__main__':
   main()
