@@ -34,6 +34,8 @@ from gpslib import GPS
 import api
 from controller import RCVehicle
 
+TELENAME = '/tmpfs/meta.txt'  # used by video streamer
+
 def signal_handler(signum, frame):
     sys.exit(0)
 
@@ -49,7 +51,6 @@ def main(argv):
     # error reading configuration file
     syslog("(FATAL) Error reading configuration file. Exiting.")
     return
-  verbose = config['app_params']['verbose']
   syslog("Configuration: %s" % json.dumps(config))
 
   # Connect to GPS 
@@ -68,6 +69,7 @@ def main(argv):
   application_id = config['cometa']['app_key']
   # use the machine's MAC address as Cometa device ID
   device_id = Runtime.get_serial()
+  config['serial'] = device_id
 
   # Instantiate a Cometa object
   com = CometaClient(cometa_server, cometa_port, application_id, config['cometa']['ssl'])
@@ -94,33 +96,34 @@ def main(argv):
       print "Server returned:", ret
 
   # create an empty telemetry file
-  s = 'echo > /tmp/meta.txt'
+  s = 'echo > ' + TELENAME 
   subprocess.check_call(s, shell=True)
 
   car = RCVehicle(config, syslog)
   # Start the vehicle with default training mode 
   car.start()
 
-  last_second, last_telemetry = 0, 0
-  telemetry_period = config['app_params']['telemetry_period']
+  # Export the vechicle object to the API module
+  api.car= car
 
+  last_second, last_telemetry = 0, 0
   while car.state:
     now = time.time()
 
     # Per second loop
     if 1 < now - last_second:
-      if config['app_params']['verbose']: print "GPS readings", gps.readings
+      if car.verbose: print "GPS readings", gps.readings
       # update GPS readings
-      car.readings = copy.deepcopy(gps.readings)
+      car.readings = gps.readings
       last_second = time.time()
 
     # Send telemetry data
-    if telemetry_period < now - last_telemetry: 
+    if car.telemetry_period < now - last_telemetry: 
       msg = car.telemetry()
       if com.send_data(str(msg)) < 0:
           syslog("Error in sending telemetry data.")
       else:
-          if com.debug:
+          if car.verbose:
               syslog("Sending telemetry data %s " % msg)
 
     time.sleep(1)
