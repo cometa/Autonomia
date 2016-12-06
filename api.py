@@ -20,7 +20,6 @@ import subprocess
 import pdb
 import utils
 from runtime import Runtime
-import car
 
 # JSON-RPC errors
 JSON_RPC_PARSE_ERROR = '{"jsonrpc": "2.0","error":{"code":-32700,"message":"Parse error"},"id": null}'
@@ -33,7 +32,8 @@ JSON_RPC_INVALID_PARAMS_FMT_NUM = '{"jsonrpc":"2.0","error":{"code": -32602,"mes
 JSON_RPC_INTERNAL_ERROR_FMT_STR = '{"jsonrpc":"2.0","error":{"code": -32603,"message":"Method not found"},"id": %s}'
 JSON_RPC_INTERNAL_ERROR_FMT_NUM = '{"jsonrpc":"2.0","error":{"code": -32602,"message":"Method not found"},"id": %d}'
 
-syslog = Runtime.syslog
+# Vehicle object instantiated in the application module
+car=None
 
 def message_handler(msg, msg_len):
   """
@@ -47,7 +47,7 @@ def message_handler(msg, msg_len):
       req = json.loads(msg)
   except:
       # the message is not a json object
-      syslog("Received JSON-RPC invalid message (parse error): %s" % msg, escape=True)
+      car.log("Received JSON-RPC invalid message (parse error): %s" % msg, escape=True)
       return JSON_RPC_PARSE_ERROR
 
   # check the message is a proper JSON-RPC message
@@ -60,7 +60,7 @@ def message_handler(msg, msg_len):
       else:
           return JSON_RPC_PARSE_ERROR
 
-  syslog("JSON-RPC: %s" % msg, escape=True)
+  car.log("JSON-RPC: %s" % msg, escape=True)
 
   method = req['method']
   func = None
@@ -97,7 +97,6 @@ def _rexec(params):
 
   params - a one element list ["/bin/cat /etc/hosts"]
   """
-
   # check that params is a list
   if not isinstance(params, list) or len(params) == 0:
      return "Parameter must be a not empty list"    
@@ -112,7 +111,6 @@ def _rexec(params):
 
 def _video_devices(params):
   """List available video devices (v4l)."""
-
   vdevices = Runtime.list_camera_devices()
   ret = {}
   ret['devices'] = vdevices[0]
@@ -123,58 +121,35 @@ def _set_telemetry_period(params):
   """Set telemetry period in seconds.
 
   params - JSON object {'period':5} 
-  """ 
-
-  import autonomia
-
+  """   
   if type(params) is not dict or 'period' not in params.keys():
       return {"success": False}
   if params['period'] <= 0:
       return {"success": False}
   
-  autonomia.config['app_params']['telemetry_period'] = params['period']
+  car.telemetry_period=params['period']
   return {"success": True}
 
 def _get_config(params):
   """ Get configuration object """
-
-  import autonomia
-  return autonomia.config
-
-def _set_config(params):
-  """ Set one or more attributes of the config object """
-
-  if type(params) is not dict:
-      return {"success": False}
-
-  import autonomia
-
-  tparams = params
-  allowed = ['app_params','arduino','gps','video']
-  for x in tparams:
-      if x not in allowed:
-          print x
-          return {"success": False}
-  for x in tparams:
-    autonomia.config[x] = params[x] 
-  
-  return {"success": True}  
+  config = Runtime.read_config()
+  config['app_params']['verbose']=car.verbose
+  config['app_params']['telemetry_period']=car.telemetry_period
+  return config
 
 def _get_status(params):
   ret = {}
   ret['state'] = car.state
   ret['mode'] = car.mode
-  ret['steering'] = car.cur_steering
-  ret['throttle'] = car.cur_throttle
+  ret['steering'] = car.steering
+  ret['throttle'] = car.throttle
   ret['GPS'] = {}
-  ret['GPS']['lat'] = car.cur_readings['lat']
-  ret['GPS']['lon'] = car.cur_readings['lon']
-
+  ret['GPS']['lat'] = car.readings['lat']
+  ret['GPS']['lon'] = car.readings['lon']
   return ret
 
 def _set_throttle(params):
   """ Set the throttle """
-
   if type(params) is not dict or 'value' not in params.keys():
       return {"success": False}
 
@@ -184,13 +159,12 @@ def _set_throttle(params):
   if val < 0 or 180 < val:
       return {"success": False}
   # TODO: call autonomoia.set_throttle(val)
-  
+
+  car.throttle=val
   return {"success": True}  
 
 def _set_steering(params):
   """ Set the steering """
-  import autonomia
-
   if type(params) is not dict or 'value' not in params.keys():
       return {"success": False}
 
@@ -199,17 +173,49 @@ def _set_steering(params):
   if val < 0 or 180 < val:
       return {"success": False}
   #car.cur_steering = val
-  autonomia.set_steering(val)
-
+  car.steering=val
   return {"success": True}  
+
+def _set_mode(params):
+  """ Set the vehicle running mode"""
+  if type(params) is not dict or 'value' not in params.keys():
+    return {"success": False}
+
+  val = params['value']
+  if val not in ("AUTO","TRAINING"):
+    return {"success": False}
+
+  if val == "AUTO":
+    car.mode2auto()
+  elif val == "TRAINING":
+    car.mode2training()
+  return {"success": True}  
+
+def _stop(params):
+  car.state2idle()
+  return {"success": True}  
+
+def _start(params):
+  car.state2run()
+  return {"success": True}  
+
+def _video_stop(params):
+  return
+
+def _video_start(params):
+  return
 
 global rpc_methods
 rpc_methods = ({'name':'rexec','function':_rexec}, 
                {'name':'video_devices','function':_video_devices}, 
                {'name':'set_telemetry_period','function':_set_telemetry_period}, 
                {'name':'get_config','function':_get_config}, 
-               {'name':'set_config','function':_set_config}, 
                {'name':'get_status','function':_get_status}, 
                {'name':'set_throttle','function':_set_throttle}, 
                {'name':'set_steering','function':_set_steering}, 
+               {'name':'set_mode','function':_set_mode}, 
+               {'name':'stop','function':_stop}, 
+               {'name':'start','function':_start}, 
+               {'name':'video_start','function':_video_start}, 
+               {'name':'video_stop','function':_video_stop}, 
 )

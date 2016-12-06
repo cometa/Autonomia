@@ -88,6 +88,7 @@ class RCVehicle(object):
     self.state=States.IDLE
     self.steering=THETA_CENTER
     self.throttle=MOTOR_NEUTRAL
+    self.serial=config['serial']
 
     self.arport=setup_arduino(config) 
     while self.arport == None:
@@ -106,16 +107,21 @@ class RCVehicle(object):
     # Set the system log
     self.log=logger
     self.verbose=config['app_params']['verbose']
+    self.telemetry_period=config['app_params']['telemetry_period']
     return
 
   def state2run(self):
     """ State transition to RUNNING """
+    if self.state == States.RUNNING:
+      return
     self.state=States.RUNNING
     self.log("State RUNNING")
     return
 
   def state2stopped(self):
     """ State transition to PAUSE """
+    if self.state == States.STOPPED:
+      return
     self.steering=THETA_CENTER
     self.throttle=MOTOR_NEUTRAL
     self.state=States.STOPPED
@@ -125,22 +131,31 @@ class RCVehicle(object):
 
   def state2idle(self):
     """ State transition to IDLE """
+    if self.state == States.IDLE:
+      return
     self.steering=THETA_CENTER
     self.throttle=MOTOR_NEUTRAL
     self.state=States.IDLE
     self.output_arduino(self.steering, self.throttle)
+    self.log("State IDLE")
     return
 
   def mode2auto(self):
     """ Mode transition to AUTO """
-
+    if self.mode == Modes.AUTO:
+      return
     # TODO: start the video fast video streamer
+
+    self.mode=Modes.AUTO
+    self.arport.flushInput()
+    self.arport.flushOutput()    
     self.log("Mode AUTO")    
     return
 
   def mode2training(self):
     """ Mode transition to TRAINING """
-
+    if self.mode == Modes.TRAINING:
+      return
     # TODO: star the video streamer with telemetry annotations
     self.mode=Modes.TRAINING
     self.arport.flushInput()
@@ -149,15 +164,24 @@ class RCVehicle(object):
     return
 
   def start(self):
+    """ Initial start """
     self.mode2training()
     self.state2run()
     self.loop_t.start()
-
-  def stop(self):
-    self.state=States.STOPPED
+    return
 
   def telemetry(self):
     ret = {}
+    ret['type'] = 1
+    ret['time'] = int(time.time() * 1000) 
+    ret['device'] = self.serial
+    ret['state'] = self.state
+    ret['mode'] = self.mode
+    ret['steering'] = self.steering
+    ret['throttle'] = self.throttle
+    ret['GPS'] = {}
+    ret['GPS']['lat'] = int(self.readings['lat'] * 10E4) / 10E4
+    ret['GPS']['lon'] = int(self.readings['lon'] * 10E4) / 10E4   
     return ret
 
   def input_arduino(self):
@@ -225,14 +249,14 @@ class RCVehicle(object):
 
         # update telemetry file 30 times per second
         if 0.03337 < now - last_update:
-          s = ('%d %d' % (steering_in, throttle_in))
+          s = str(steering_in) + ' ' + str(throttle_in)
           # create metadata file for embedding steering and throttle values in the video stream
           try:
-            f = open('/tmp/meta.tmp', 'w', 0)
+            f = open('/tmpfs/meta.tmp', 'w', 0)
             f.write(s)
             f.close() 
-            # use mv that is a system call and not preempted
-            s = '/bin/mv /tmp/meta.tmp /tmp/meta.txt'
+            # use mv that is a system call and not preempted (atomic)
+            s = '/bin/mv /tmpfs/meta.tmp /tmpfs/meta.txt'
             subprocess.check_call(s, shell=True)
           except Exception, e:
             self.log("%s" % str(e))
@@ -249,7 +273,7 @@ class RCVehicle(object):
       # ------------------------------------------------------------
       #
       elif self.state == States.IDLE:
-        time.sleep(1)
+        time.sleep(0.1)
       #
       # ------------------------------------------------------------
       #
