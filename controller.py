@@ -23,6 +23,8 @@ import Queue
 import threading
 import subprocess
 
+import streamer
+
 class States:
   """ Vehicle states """
   IDLE=1
@@ -38,6 +40,8 @@ class Modes:
 # --- Module constansts  
 THETA_CENTER = 90
 MOTOR_NEUTRAL = 90
+# filename to fetch telemetry from -- updated atomically by the controller loop at 30 Hz
+TELEMFNAME = '/tmpfs/meta.txt'
 
 def setup_arduino(config, logger):
   """ Arduino radio receiver and servos controller setup. """
@@ -182,8 +186,12 @@ class RCVehicle(object):
     ret['steering'] = self.steering
     ret['throttle'] = self.throttle
     ret['GPS'] = {}
-    ret['GPS']['lat'] = int(self.readings['lat'] * 10E4) / 10E4
-    ret['GPS']['lon'] = int(self.readings['lon'] * 10E4) / 10E4   
+    try:
+      ret['GPS']['lat'] = int(self.readings['lat'] * 10E4) / 10E4
+      ret['GPS']['lon'] = int(self.readings['lon'] * 10E4) / 10E4
+    except:
+      # leave GPS empty
+      pass
     return ret
 
   def input_arduino(self):
@@ -226,6 +234,7 @@ class RCVehicle(object):
     last_update=0
     steering_in=self.steering
     throttle_in=self.throttle
+    mv = '/bin/mv /tmpfs/meta.tmp ' + TELEMFNAME
 
     while True:
       now = time.time()
@@ -258,8 +267,7 @@ class RCVehicle(object):
             f.write(s)
             f.close() 
             # use mv that is a system call and not preempted (atomic)
-            s = '/bin/mv /tmpfs/meta.tmp /tmpfs/meta.txt'
-            subprocess.check_call(s, shell=True)
+            subprocess.check_call(mv, shell=True)
           except Exception, e:
             self.log("%s" % str(e))
             pass

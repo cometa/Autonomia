@@ -19,6 +19,7 @@ import json
 import subprocess
 import pdb
 import utils
+import streamer
 from runtime import Runtime
 
 # JSON-RPC errors
@@ -200,10 +201,17 @@ def _start(params):
   return {"success": True}  
 
 def _video_stop(params):
-  return
+  streamer.video_stop()
+  return {"success": True}  
 
 def _video_start(params):
-  return
+  if type(params) is not dict or 'telem' not in params.keys():
+    return {"success": False}
+  #pdb.set_trace()
+
+  telem = params['telem']
+  streamer.video_start(telem)
+  return {"success": True}  
 
 global rpc_methods
 rpc_methods = ({'name':'rexec','function':_rexec}, 

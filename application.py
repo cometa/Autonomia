@@ -33,8 +33,9 @@ from runtime import Runtime
 from gpslib import GPS
 import api
 from controller import RCVehicle
+import streamer
 
-TELENAME = '/tmpfs/meta.txt'  # used by video streamer
+TELEMFNAME = '/tmpfs/meta.txt'
 
 def signal_handler(signum, frame):
     sys.exit(0)
@@ -95,9 +96,7 @@ def main(argv):
   if com.debug:
       print "Server returned:", ret
 
-  # create an empty telemetry file
-  s = 'echo > ' + TELENAME 
-  subprocess.check_call(s, shell=True)
+  streamer.init(config, syslog)
 
   car = RCVehicle(config, syslog)
   # Start the vehicle with default training mode 
@@ -112,9 +111,12 @@ def main(argv):
 
     # Per second loop
     if 1 < now - last_second:
-      if car.verbose: print "GPS readings", gps.readings
+      if car.verbose and gps: print "GPS readings", gps.readings
       # update GPS readings
-      car.readings = gps.readings
+      try:
+        if gps: car.readings = gps.readings
+      except:
+        pass
       last_second = now
 
     # Send telemetry data
