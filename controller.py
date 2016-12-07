@@ -39,7 +39,7 @@ class Modes:
 THETA_CENTER = 90
 MOTOR_NEUTRAL = 90
 
-def setup_arduino(config):
+def setup_arduino(config, logger):
   """ Arduino radio receiver and servos controller setup. """
   try:
     # set serial non-blocking 
@@ -47,7 +47,7 @@ def setup_arduino(config):
     port.flushInput()
     port.flushOutput()
   except Exception as e:
-    syslog (e)
+    logger("Arduino setup: %s" % e)
     return None
   # wait the board to start
   while port.inWaiting() == 0:
@@ -90,11 +90,15 @@ class RCVehicle(object):
     self.throttle=MOTOR_NEUTRAL
     self.serial=config['serial']
 
-    self.arport=setup_arduino(config) 
+    # Set the system log
+    self.log=logger
+    self.verbose=config['app_params']['verbose']
+
+    self.arport=setup_arduino(config, self.log) 
     while self.arport == None:
-      syslog("Fatal error setting up Arduino board. Cannot proceed without properly connecting to the control board.")
+      self.log("Fatal error setting up Arduino board. Cannot proceed without properly connecting to the control board.")
       time.sleep(5)
-      self.arport=setup_arduino(config) 
+      self.arport=setup_arduino(config, self.log) 
     # TODO: remember to create a board heartbeat thread
 
     # Global lock
@@ -104,9 +108,7 @@ class RCVehicle(object):
     self.loop_t = threading.Thread(target=self.control_loop)
     self.loop_t.daemon = True   # force to exit on SIGINT
 
-    # Set the system log
-    self.log=logger
-    self.verbose=config['app_params']['verbose']
+
     self.telemetry_period=config['app_params']['telemetry_period']
     return
 
