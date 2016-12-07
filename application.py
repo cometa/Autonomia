@@ -55,7 +55,7 @@ def main(argv):
 
   # Connect to GPS 
   if 'gps' in config:
-    gps = GPS()
+    gps = GPS(syslog)
     ret = gps.connect(config['gps']['serial'], config['gps']['speed'])
     if ret:
       syslog("Connected to GPS.")
@@ -72,7 +72,7 @@ def main(argv):
   config['serial'] = device_id
 
   # Instantiate a Cometa object
-  com = CometaClient(cometa_server, cometa_port, application_id, config['cometa']['ssl'])
+  com = CometaClient(cometa_server, cometa_port, application_id, config['cometa']['ssl'], syslog)
   com.debug = config['app_params']['debug']
   # bind the message_handler() callback
   com.bind_cb(api.message_handler)

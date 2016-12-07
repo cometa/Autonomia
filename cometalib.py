@@ -29,7 +29,7 @@ class CometaClient(object):
   """Connect a device to the Cometa infrastructure"""
   errors = {0:'ok', 1:'timeout', 2:'network error', 3:'protocol error', 4:'authorization error', 5:'wrong parameters', 9:'internal error'} 
 
-  def __init__(self,server, port, application_id, use_ssl):
+  def __init__(self,server, port, application_id, use_ssl, logger):
     """
     The Cometa instance constructor.
 
@@ -55,6 +55,7 @@ class CometaClient(object):
     self._thbeat = None
     self._hb_lock = threading.Lock()
     self._reconnecting = False
+    self.log = logger
     return
 
   def attach(self, device_id, device_info):
@@ -186,7 +187,7 @@ class CometaClient(object):
         print "--- heartbeat while reconnecting"
         continue  
       sendBuf = "1\r\n%c\r\n" % '\06'
-      print "sending heartbeat"
+      self.log("sending heartbeat")
       try:
         self._hb_lock.acquire()
         self._sock.send(sendBuf)

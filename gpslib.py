@@ -26,9 +26,10 @@ import pynmea2
 class GPS(object):
   """Receive data from a NMEA compatible GPS """
 
-  def __init__(self):
+  def __init__(self, logger):
     self.port = None
     self.reader = None
+    self.log = logger
     self.readings = {}
     """ Current readings accessible from the `readings` instance attribute """
   
@@ -38,7 +39,7 @@ class GPS(object):
     try:
       self.port = serial.Serial(device, speed)
     except Exception as e:
-      print (e)
+      log("GPS: %s" % e)
       return False
 
     self.reader = pynmea2.NMEAStreamReader()
@@ -75,6 +76,6 @@ class GPS(object):
               self.readings['lon_dir'] = msg.lon_dir
               self.readings['time'] = msg.timestamp
           except Exception, e:
-            print e
+            log("GPS: %s" % e)
       except Exception, e:
-        print e            
+        log("GPS: %s" % e)
