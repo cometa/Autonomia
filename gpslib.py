@@ -39,7 +39,7 @@ class GPS(object):
     try:
       self.port = serial.Serial(device, speed)
     except Exception as e:
-      log("GPS: %s" % e)
+      self.log("GPS: %s" % e)
       return False
 
     self.reader = pynmea2.NMEAStreamReader()
@@ -76,6 +76,6 @@ class GPS(object):
               self.readings['lon_dir'] = msg.lon_dir
               self.readings['time'] = msg.timestamp
           except Exception, e:
-            log("GPS: %s" % e)
+            self.log("GPS: %s" % e)
       except Exception, e:
-        log("GPS: %s" % e)
+        self.log("GPS: %s" % e)
