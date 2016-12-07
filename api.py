@@ -145,8 +145,11 @@ def _get_status(params):
   ret['steering'] = car.steering
   ret['throttle'] = car.throttle
   ret['GPS'] = {}
-  ret['GPS']['lat'] = car.readings['lat']
-  ret['GPS']['lon'] = car.readings['lon']
+  try:
+  	ret['GPS']['lat'] = car.readings['lat']
+  	ret['GPS']['lon'] = car.readings['lon']
+  except:
+	pass
   return ret
 
 def _set_throttle(params):
