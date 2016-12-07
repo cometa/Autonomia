@@ -96,7 +96,7 @@ def video_start(telem):
   if telem:
     # streaming video with embedded telemetry
     params = [pname, '-r','30', '-use_wallclock_as_timestamps', '1', '-thread_queue_size', '512', '-f', 'v4l2', '-i', camera, '-c:v ', vcodec, '-maxrate', '768k', '-bufsize', '960k']
-    format = '\"format=yuv444p,drawbox=y=ih-h:color=black@0.9:width=40:height=12:t=max,drawtext=fontfile=OpenSans-Regular.ttf:textfile=' + TELEMFNAME + ':reload=1:fontsize=10:fontcolor=white:x=0:y=(h-th-2),format=yuv420p\"'
+    format = 'format=yuv444p,drawbox=y=ih-h:color=black@0.9:width=40:height=12:t=max,drawtext=fontfile=OpenSans-Regular.ttf:textfile=' + TELEMFNAME + ':reload=1:fontsize=10:fontcolor=white:x=0:y=(h-th-2),format=yuv420p'
     url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
     params = params + ['-vf', format, '-threads', '4', '-r', '30', '-g', '60', '-f', 'flv', url]
     # spawn a process and do not wait
