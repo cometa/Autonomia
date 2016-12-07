@@ -115,7 +115,7 @@ def main(argv):
       if car.verbose: print "GPS readings", gps.readings
       # update GPS readings
       car.readings = gps.readings
-      last_second = time.time()
+      last_second = now
 
     # Send telemetry data
     if car.telemetry_period < now - last_telemetry: 
@@ -125,6 +125,7 @@ def main(argv):
       else:
           if car.verbose:
               syslog("Sending telemetry data %s " % msg)
+      last_telemetry = now
 
     time.sleep(1)
 
