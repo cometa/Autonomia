@@ -26,6 +26,8 @@ import signal
 import subprocess
 import pdb
 
+import tensorflow as tf
+
 # ---------------------
 import utils
 from cometalib import CometaClient
