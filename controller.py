@@ -179,7 +179,7 @@ class RCVehicle(object):
   def telemetry(self):
     ret = {}
     ret['type'] = 1
-    ret['time'] = int(time.time() * 1000) 
+    ret['time'] = str(int(time.time() * 1000))
     ret['device'] = self.serial
     ret['state'] = self.state
     ret['mode'] = self.mode
