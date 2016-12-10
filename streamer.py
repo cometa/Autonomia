@@ -16,6 +16,7 @@ limitations under the License.
 """
 
 import os
+import time
 import subprocess
 
 # filename to fetch telemetry from -- updated atomically by the controller loop at 30 Hz
@@ -82,6 +83,7 @@ def video_start(telem):
 
   # insure no streamer is running
   video_stop()
+  time.sleep(1)
 
   try:  
     pname = config['video']['streamer']
