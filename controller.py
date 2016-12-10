@@ -247,7 +247,7 @@ class RCVehicle(object):
           if self.arport.inWaiting():
             steering_in, throttle_in = self.input_arduino()
         except Exception, e:
-          self.log("%s" % str(e))
+          self.log("input_arduino: %s" % str(e))
           continue
         # set steering to neutral if within an interval around 90
         steering_in = 90 if 87 <= steering_in < 92 else steering_in
@@ -269,7 +269,7 @@ class RCVehicle(object):
             # use mv that is a system call and not preempted (atomic)
             subprocess.check_call(mv, shell=True)
           except Exception, e:
-            self.log("%s" % str(e))
+            self.log("writing file: %s" % str(e))
             pass
         last_update = now
         # set new values for throttle and steering servos
