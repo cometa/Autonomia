@@ -36,6 +36,7 @@ class Modes:
   """ Vehicle running modes """
   AUTO=1        # fully autonomous
   TRAINING=2    # RC controlled to capture training video
+  REMOTE=3      # controlled remotely through Cometa JSON/RPC 
 
 # --- Module constansts  
 THETA_CENTER = 90
@@ -279,6 +280,11 @@ class RCVehicle(object):
       #
       elif self.state == States.RUNNING and self.mode == Modes.AUTO:
         time.sleep(1)
+      #      # ------------------------------------------------------------
+      #
+      elif self.state == States.RUNNING and self.mode == Modes.REMOTE:
+        self.output_arduino(car.steering, car.throttle)
+        time.sleep(0.01)
       #
       # ------------------------------------------------------------
       #
