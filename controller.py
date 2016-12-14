@@ -163,12 +163,26 @@ class RCVehicle(object):
     """ Mode transition to TRAINING """
     if self.mode == Modes.TRAINING:
       return
-    # TODO: star the video streamer with telemetry annotations
+    # TODO: start the video streamer with telemetry annotations
     self.mode=Modes.TRAINING
     self.arport.flushInput()
     self.arport.flushOutput()
     self.log("Mode TRAINING")
     return
+
+  def mode2remote(self):
+    """ Mode transition to REMOTE """
+    if self.mode == Modes.REMOTE:
+      return
+
+    self.arport.flushInput()
+    self.arport.flushOutput()  
+    self.steering=THETA_CENTER
+    self.throttle=MOTOR_NEUTRAL  
+    self.mode=Modes.REMOTE
+    self.log("Mode REMOTE")    
+    return
+
 
   def start(self):
     """ Initial start """

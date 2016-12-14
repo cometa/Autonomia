@@ -186,13 +186,15 @@ def _set_mode(params):
     return {"success": False}
 
   val = params['value']
-  if val not in ("AUTO","TRAINING"):
+  if val not in ("AUTO","TRAINING","REMOTE"):
     return {"success": False}
 
   if val == "AUTO":
     car.mode2auto()
   elif val == "TRAINING":
     car.mode2training()
+  elif val == "REMOTE":
+    car.mode2remote()
   return {"success": True}  
 
 def _stop(params):
