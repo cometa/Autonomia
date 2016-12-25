@@ -15,6 +15,9 @@ import glob
 import random
 import os
 
+import time
+random.seed(time.time())
+
 def scan_dir(dir):
   """ Scan *.jpg files from directory dir """
   pattern = dir + '/*.jpg'
@@ -134,6 +137,7 @@ def main(argv):
       row += 1
       print X[row]
       print y_[row]
+      print y_d
 
 
 if __name__ == "__main__":

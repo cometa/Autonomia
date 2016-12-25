@@ -33,7 +33,9 @@ def extract_roi(img):
   telem = img[height - telem_h - 1:height - 1, 0:telem_w - 1]
   # convert to grayscale
   telemgray = cv2.cvtColor(telem, cv2.COLOR_BGR2GRAY)
-  return telemgray 
+  # threshold the image
+  _, thresh = cv2.threshold(telemgray,120,255,0)  
+  return thresh #telemgray 
 
 def get_digits(img):
   a = np.zeros(6, dtype=object)

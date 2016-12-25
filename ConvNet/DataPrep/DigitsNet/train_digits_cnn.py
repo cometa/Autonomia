@@ -20,11 +20,12 @@ def main (argv):
   X=np.load(argv[0]) # 'dataset-1184.npy'
   Y=np.load(argv[1]) # 'labels-1184.npy'
 
-  X_train = X[0:999]
-  X_test = X[1000:X.shape[0] - 1]
+  train_index = X.shape[0] * 0.8
+  X_train = X[0:train_index]
+  X_test = X[train_index + 1:X.shape[0] - 1]
 
-  y_train = Y[0:999]
-  y_test = Y[1000:Y.shape[0] - 1]
+  y_train = Y[0:train_index]
+  y_test = Y[train_index + 1:Y.shape[0] - 1]
 
   #------------
 
@@ -46,7 +47,7 @@ def main (argv):
   # size of pooling area for max pooling
   pool_size = (3, 3)
 
-  batch_size = 48
+  batch_size = 64
   nb_classes = 10
   nb_epoch = 30
 
