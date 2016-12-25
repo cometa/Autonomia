@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
   Extract steering and throttle values embedded in an image.
 
@@ -11,12 +12,16 @@ import numpy as np
 import sys
 import glob
 import random
+import time
+import ntpath
 
 from keras.datasets import mnist
 from keras.models import Sequential
 from keras.optimizers import SGD, RMSprop, Adagrad, Adam
 from keras.utils import np_utils
 from keras.models import model_from_json
+
+interactive = False
 
 def scan_dir(dir):
   """ Scan *.jpg files from directory dir """
@@ -81,8 +86,11 @@ def show_roi(img):
 
 def main(argv):
   # scan directory 
-  fnames = scan_dir(argv[0])
+  f = scan_dir(argv[0])
+  fnames = sorted(f)
   print "found %d jpg files in %s" % (len(fnames), dir)
+
+  out_file = open(argv[0] + 'labels.csv', 'w')
 
   # Load model structure
   model = model_from_json(open('DigitsNet/digits_cnn.json').read())
@@ -94,29 +102,38 @@ def main(argv):
                 optimizer='rmsprop',
                 metrics=['accuracy'])
 
+  digits = np.zeros(6, dtype=int)
   for filename in fnames:
-    print filename
     img = cv2.imread(filename)
-    show_img(img)
+    if interactive: show_img(img)
     roi = extract_roi(img)
-    show_roi(roi)
+    if interactive: show_roi(roi)
 
     digit_imgs = get_digits(roi)
-    for digit in digit_imgs:
+    if len(digit_imgs) != 6:
+      print "ERROR: less than six digits in the image"
+      key = cv2.waitKey(0)
+      continue
 
-      X = np.array(digit,  dtype=np.float)
+    for i, digim in enumerate(digit_imgs):
+      X = np.array(digim,  dtype=np.float)
       X /= 255.
-      X = digit.reshape(1,7,5,1)
+      X = digim.reshape(1,7,5,1)
 
       p = model.predict(X[0:1])
-      print p
-      print np.argmax(p, axis=1)[0]
-      print
+      digits[i] = np.argmax(p, axis=1)[0]
 
-    key = cv2.waitKey(0)
-    if key == 27:
-      return
+    steering = digits[0] * 10**2 + digits[1] * 10 + digits[2]
+    throttle = digits[3] * 10**2 + digits[4] * 10 + digits[5]
 
+    print filename, steering, throttle
+    out_file.write("%s,%d,%d\n" % (ntpath.basename(filename), steering, throttle))
+
+    if interactive:
+      key = cv2.waitKey(0)
+      if key == 27:
+        return
+
+  out_file.close()
 if __name__ == "__main__":
     main(sys.argv[1:])
-
