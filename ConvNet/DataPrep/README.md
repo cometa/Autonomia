@@ -42,11 +42,11 @@ A CNN coded in Keras/Tensorflow has been trained to recognize each digit in the 
 
 The `extract_telemetry.py` Python script is used to extract telemetry from all the still images in a directory, and creating the `labels.csv` file in the same directory:
 ```
-extract_telemetry.py {DIRECTORY}
+extract_telemetry.py {DIRECTORY}/
 ```
 For instance:
 ```
-extract_telemetry.py  images-1482024251
+extract_telemetry.py  images-1482024251/
 ```
 At completion, the `images-1482024251/labels.csv` contains:
 ```

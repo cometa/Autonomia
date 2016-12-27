@@ -1,10 +1,32 @@
 #!/usr/bin/env python
 """
+  Cloud connected autonomous RC car.
+
+  Copyright 2016 Visible Energy Inc. All Rights Reserved.
+"""
+__license__ = """
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
+"""
   Extract steering and throttle values embedded in an image.
 
-  $ python extract_telemetry {IMAGE_DIR}
+  Usage:
+    ./extract_telemetry <IMAGE-DIR>
 
-  Output: labels.csv. A file with filename, steering and throttle extracted and interpreted.
+  Arguments:
+    <IMAGE-DIR> image directory
+
+  Output: 
+    labels.csv. A CSV file in <IMAGE-DIR> with filename, steering and throttle extracted and interpreted.
 """
 
 import cv2

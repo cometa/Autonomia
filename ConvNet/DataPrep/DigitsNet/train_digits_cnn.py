@@ -15,7 +15,6 @@ from keras.optimizers import SGD, RMSprop, Adagrad, Adam
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers import Convolution2D, MaxPooling2D, AveragePooling2D, Flatten
 
-
 def main (argv):
   X=np.load(argv[0]) # 'dataset-1184.npy'
   Y=np.load(argv[1]) # 'labels-1184.npy'
@@ -72,7 +71,12 @@ def main (argv):
 
   sgd = RMSprop(lr=0.001)
 
-  model.compile(loss='categorical_crossentropy',
+  from keras import backend as K
+  def custom_objective(y_true, y_pred):
+    return K.categorical_crossentropy(y_pred, y_true)
+
+#  model.compile(loss='categorical_crossentropy',
+  model.compile(loss=custom_objective,
                 optimizer=sgd, #'rmsprop',
                 metrics=['accuracy'])
 
@@ -86,10 +90,10 @@ def main (argv):
   print('Test score:', score[0])
   print('Test accuracy:', score[1])
 
-  with open('digits_cnn.json', 'w') as f:
-      f.write(model.to_json())
-
-  model.save_weights('digits_cnn_weights.h5')
+#  with open('digits_cnn.json', 'w') as f:
+#      f.write(model.to_json())
+#
+#  model.save_weights('digits_cnn_weights.h5')
 
 if __name__ == "__main__":
     main(sys.argv[1:])
