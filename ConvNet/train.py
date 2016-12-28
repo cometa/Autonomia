@@ -18,16 +18,24 @@ limitations under the License.
 
 import numpy as np
 import sys
+import os
 from keras.models import Sequential
 from keras.optimizers import SGD, RMSprop, Adagrad, Adam
 from keras.layers.core import Dense, Dropout, Activation
-from keras.layers import Convolution2D, MaxPooling2D, AveragePooling2D, Flatten
+from keras.layers import Convolution2D, MaxPooling2D, AveragePooling2D, Flatten, PReLU
 
 from config import TrainConfig
 from keras import backend as K
 
-def custom_objective(y_true, y_pred):
-    return K.categorical_crossentropy(y_pred, y_true)
+def combined_crossentropy(y_true, y_pred):
+    y_true_steering = y_true[:, :num_outputs]
+    y_true_throttle = y_true[:, num_outputs:]
+    y_pred_steering = y_pred[:, :num_outputs]
+    y_pred_throttle = y_pred[:, num_outputs:]
+
+    steering_crossentropy = K.categorical_crossentropy(y_pred_steering, y_true_steering)
+    throttle_crossentropy = K.categorical_crossentropy(y_pred_throttle, y_true_throttle)
+    return (steering_crossentropy + throttle_crossentropy) / 2.
 
 def create_model_prelu():
     model = Sequential()
@@ -45,24 +53,42 @@ def create_model_prelu():
     model.add(PReLU())
 
     model.add(Dense(num_outputs, init='he_normal'))
+    model.add(Activation('softmax'))
 
-    model.compile(optimizer="adam", loss="mse")
+
+    sgd = RMSprop(lr=0.001)
+#    model.compile(optimizer="adam", loss="mse")
+    model.compile(optimizer=sgd, loss=combined_crossentropy, metrics=['accuracy'])
 
     print('Model is created and compiled..')
     return model
 
 if __name__ == "__main__":
-    config = TrainConfig()
+  config = TrainConfig()
 
-    ch = config.num_channels
-    row = config.img_height
-    col = config.img_width
+  try:
+    data_path = os.path.expanduser(sys.argv[1])
+  except Exception, e:
+    print e, "Usage: ./prepare_data.py <DATA-DIR>"
+    sys.exit(-1)
 
-    num_epoch = config.num_epoch
-    batch_size = config.batch_size
-    data_path = config.data_path
+  if not os.path.exists(data_path):
+    print "Directory %s not found." % data_path
+    sys.exit(-1)
 
-    num_outputs = config.num_buckets * 2
+  row, col = config.img_height, config.img_width
+  ch = config.num_channels
+  num_epoch = config.num_epoch
+  batch_size = config.batch_size
+  num_outputs = config.num_buckets * 2
 
-    model = create_model_prelu()
-    print model.summary()
+  model = create_model_prelu()
+  print model.summary()
+
+  print "loading images and labels"
+  X = np.load("{}/X_yuv_gray.npy".format(data_path))
+  y1_steering = np.load("{}/y1_steering.npy".format(data_path))
+  y2_throttle = np.load("{}/y2_throttle.npy".format(data_path))
+
+  model.fit(X, np.append(y1_steering, y2_throttle, axis=1), batch_size=batch_size, nb_epoch=num_epoch, verbose=1, validation_split=0.2)
+
