@@ -90,10 +90,10 @@ def main (argv):
   print('Test score:', score[0])
   print('Test accuracy:', score[1])
 
-#  with open('digits_cnn.json', 'w') as f:
-#      f.write(model.to_json())
-#
-#  model.save_weights('digits_cnn_weights.h5')
+  with open('digits_cnn.json', 'w') as f:
+      f.write(model.to_json())
+
+  model.save_weights('digits_cnn_weights.h5')
 
 if __name__ == "__main__":
     main(sys.argv[1:])
