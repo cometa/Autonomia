@@ -233,13 +233,19 @@ class RCVehicle(object):
     # set steering to neutral if within an interval around 90
     steering = 90 if 88 < steering < 92 else steering
     # send a new steering PWM setting to the controller
-    if steering != self.steering:
-      self.steering = steering   # update global
-      self.arport.write(('S %d\n' % self.steering).encode('ascii'))
+    if self.mode == Modes.TRAINING:
+      if steering != self.steering:
+        self.steering = steering   # update global
+        self.arport.write(('S %d\n' % self.steering).encode('ascii'))
+    else:
+        self.arport.write(('S %d\n' % self.steering).encode('ascii'))
 
     # send a new throttle PWM setting to the controller
-    if throttle != self.throttle:
-      self.throttle = throttle   # update global
+    if self.mode == Modes.TRAINING:
+      if throttle != self.throttle:
+        self.throttle = throttle   # update global
+        self.arport.write(('M %d\n' % self.throttle).encode('ascii'))
+    else:
       self.arport.write(('M %d\n' % self.throttle).encode('ascii'))
     return
 
@@ -300,8 +306,8 @@ class RCVehicle(object):
       #      # ------------------------------------------------------------
       #
       elif self.state == States.RUNNING and self.mode == Modes.REMOTE:
-        self.output_arduino(car.steering, car.throttle)
-        time.sleep(0.01)
+        self.output_arduino(self.steering, self.throttle)
+        time.sleep(0.2)
       #
       # ------------------------------------------------------------
       #
