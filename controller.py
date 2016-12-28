@@ -113,7 +113,6 @@ class RCVehicle(object):
     self.loop_t = threading.Thread(target=self.control_loop)
     self.loop_t.daemon = True   # force to exit on SIGINT
 
-
     self.telemetry_period=config['app_params']['telemetry_period']
     return
 
@@ -121,6 +120,8 @@ class RCVehicle(object):
     """ State transition to RUNNING """
     if self.state == States.RUNNING:
       return
+    self.steering=THETA_CENTER
+    self.throttle=MOTOR_NEUTRAL
     self.state=States.RUNNING
     self.log("State RUNNING")
     return
@@ -294,6 +295,7 @@ class RCVehicle(object):
       # ------------------------------------------------------------
       #
       elif self.state == States.RUNNING and self.mode == Modes.AUTO:
+        # TODO: predict steering and trhottle and set the values 20-30 times per second (depending on preditiction speed)
         time.sleep(1)
       #      # ------------------------------------------------------------
       #
