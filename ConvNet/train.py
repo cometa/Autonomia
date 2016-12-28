@@ -92,3 +92,8 @@ if __name__ == "__main__":
 
   model.fit(X, np.append(y1_steering, y2_throttle, axis=1), batch_size=batch_size, nb_epoch=num_epoch, verbose=1, validation_split=0.2)
 
+  print "saving model and weights"
+  with open("{}/autonomia_cnn.json".format(data_path), 'w') as f:
+      f.write(model.to_json())
+
+  model.save_weights("{}/autonomia_cnn_weights.h5".format(data_path))
