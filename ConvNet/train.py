@@ -90,7 +90,7 @@ if __name__ == "__main__":
   y1_steering = np.load("{}/y1_steering.npy".format(data_path))
   y2_throttle = np.load("{}/y2_throttle.npy".format(data_path))
 
-  model.fit(X, np.append(y1_steering, y2_throttle, axis=1), batch_size=batch_size, nb_epoch=num_epoch, verbose=1, validation_split=0.2)
+  model.fit(X, np.append(y1_steering, y2_throttle, axis=1), batch_size=batch_size, nb_epoch=30, verbose=1, validation_split=0.1)
 
   print "saving model and weights"
   with open("{}/autonomia_cnn.json".format(data_path), 'w') as f:
