@@ -36,6 +36,7 @@ class Modes:
   """ Vehicle running modes """
   AUTO=1        # fully autonomous
   TRAINING=2    # RC controlled to capture training video
+  REMOTE=3      # controlled remotely through Cometa JSON/RPC 
 
 # --- Module constansts  
 THETA_CENTER = 90
@@ -162,12 +163,26 @@ class RCVehicle(object):
     """ Mode transition to TRAINING """
     if self.mode == Modes.TRAINING:
       return
-    # TODO: star the video streamer with telemetry annotations
+    # TODO: start the video streamer with telemetry annotations
     self.mode=Modes.TRAINING
     self.arport.flushInput()
     self.arport.flushOutput()
     self.log("Mode TRAINING")
     return
+
+  def mode2remote(self):
+    """ Mode transition to REMOTE """
+    if self.mode == Modes.REMOTE:
+      return
+
+    self.arport.flushInput()
+    self.arport.flushOutput()  
+    self.steering=THETA_CENTER
+    self.throttle=MOTOR_NEUTRAL  
+    self.mode=Modes.REMOTE
+    self.log("Mode REMOTE")    
+    return
+
 
   def start(self):
     """ Initial start """
@@ -280,6 +295,11 @@ class RCVehicle(object):
       #
       elif self.state == States.RUNNING and self.mode == Modes.AUTO:
         time.sleep(1)
+      #      # ------------------------------------------------------------
+      #
+      elif self.state == States.RUNNING and self.mode == Modes.REMOTE:
+        self.output_arduino(car.steering, car.throttle)
+        time.sleep(0.01)
       #
       # ------------------------------------------------------------
       #
