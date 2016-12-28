@@ -282,8 +282,7 @@ class RCVehicle(object):
 
         # update telemetry file 30 times per second
         if 0.03337 < now - last_update:
-#          s = str(steering_in) + ' ' + str(throttle_in)
-	  s = "%03d %03d" %  (steering_in, throttle_in)
+          s = "%03d %03d" %  (steering_in, throttle_in)
           # create metadata file for embedding steering and throttle values in the video stream
           try:
             f = open('/tmpfs/meta.tmp', 'w', 0)
