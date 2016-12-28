@@ -158,7 +158,6 @@ def _set_throttle(params):
       return {"success": False}
 
   val = params['value']
-  print type(val)
   # only values in the [0.180] range
   if val < 0 or 180 < val:
       return {"success": False}
