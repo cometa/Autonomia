@@ -1,6 +1,4 @@
 class DataConfig(object):
-    data_path = "/home/oem/Autonomia-Video/1482616994"
-    data_name = "hsv_gray"
     img_height = 240
     img_width = 320
     num_channels = 1

@@ -17,14 +17,17 @@ limitations under the License.
 """
 
 """
-  Prepare data for CNN training from input files are in the config.data_path directory set in config.py. 
-  Expected files are the images and a labels.csv file as obtained from `extract_telemetry.py`.
+  Prepare data for CNN training from image and label input files as specified in the labels.csv file obtained with the `extract_telemetry.py` utility.
+  The `labels.csv`and the image files are in the DATA-DIR passed as first parameter. asconfig.data_path directory set in config.py. 
 
+  This utility prepares three numpy arrays that are saved in the `X_yuv_gray.npy`, `y1_steering.npy` `y2_throttle.npy` files in the same <DATA-DIR> directory.
+  The files contains respectively the processed images, the steering and throttle values for each image, encoded as one-hot vectors.
+ 
   Usage: 
-    ./prepare_data.py <OUTPUT-DIR> 
+    ./prepare_data.py <DATA-DIR> 
 
   Arguments:
-    <OUTPUT-DIR> output directory to save the numpy arrays into
+    <DATA-DIR> input and output directory
 """
 
 import cv2
@@ -88,7 +91,17 @@ def throttle2bucket(t):
 
 if __name__ == "__main__":
   config = DataConfig()
-  data_path = config.data_path    
+
+  try:
+    data_path = os.path.expanduser(sys.argv[1])
+  except Exception, e:
+    print "Usage: ./prepare_data.py <DATA-DIR>"
+    sys.exit(-1)
+
+  if not os.path.exists(data_path):
+    print "Directory %s not found." % data_path
+    sys.exit(-1)
+
   row, col = config.img_height, config.img_width
   num_buckets = config.num_buckets
   img_height, img_width, num_channels = config.img_height, config.img_width, config.num_channels
@@ -133,7 +146,8 @@ if __name__ == "__main__":
     if interactive: show_gray(Y_img)
     # Y_img is of shape (240,320,1)
     Y_img = Y_img.reshape(1, img_height, img_width, num_channels)
-    X[index] = Y_img
+    # normalize the image values
+    X[index] = Y_img / 255.
     # steering bucket
     y1[index, steering2bucket(steering)] = 1.
     # throttle bucket
@@ -149,7 +163,9 @@ if __name__ == "__main__":
   if not os.path.exists(outpath):
       os.makedirs(outpath)
 
-  print "saving numpy arrays in: ", outpath
+  print "saving images numpy array in: %s/X_yuv_gray.npy" % outpath 
   np.save("{}/X_yuv_gray".format(outpath), X)
+  print "saving steering numpy array in: %s/y1_steering.npy" % outpath 
   np.save("{}/y1_steering".format(outpath), y1)
+  print "saving throttle numpy array in: %s/y2_throttle.npy" % outpath 
   np.save("{}/y2_throttle".format(outpath), y2)
