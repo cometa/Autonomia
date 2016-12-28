@@ -7,7 +7,7 @@ class DataConfig(object):
 class TrainConfig(DataConfig):
     model_name = "prelu"
     batch_size = 32
-    num_epoch = 10
+    num_epoch = 30
 
 class TestConfig(TrainConfig):
     model_path = ""
