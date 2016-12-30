@@ -25,7 +25,7 @@ import subprocess
 
 import streamer
 import utils
-import numpy
+import numpy as np
 from keras.models import model_from_json
 
 class States:
