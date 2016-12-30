@@ -17,6 +17,7 @@ limitations under the License.
 
 import math
 import hashlib
+import numpy as np
 
 def check_rpc_msg(req):
     ret = False
