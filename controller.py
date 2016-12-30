@@ -327,7 +327,7 @@ class RCVehicle(object):
         # predict steering and trhottle and set the values at a rate depending on preditiction speed
         start_t = time.time()
         Y = utils.read_uyvy(FRAMEFNAME) # Y is of shape (1,240,320,1)
-        if Y == None:
+        if Y is None:
           continue
         # normalize the image values
         Y = Y / 255.
