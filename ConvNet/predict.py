@@ -48,19 +48,7 @@ def show_img(img):
   cv2.imshow('dst1_rt', img)  
   return
 
-def invert_log_bucket(a):
-  # Reverse the function that buckets the steering for neural net output.
-  steer = a - 7
-  original = steer
-  steer = abs(steer)
-  steer = math.pow(2.0, steer)
-  steer -= 1.0
-  steer = math.copysign(steer, original)
-  steer += 90.0
-  steer = max(0, min(179, steer))
-  return steer
-
-# convert throttle from [0,180] range to a bucket number in the [0.14] range using a map
+# throttle bucket conversion map -- from [0,180] range to a bucket number in the [0.14] range
 throttle_map = [
     [80,0], # if t <= 80 -> o=0 # Breaking:
     [82,1], # elif t <= 82 -> o=1
@@ -82,8 +70,8 @@ throttle_map = [
     [110,14]  # elif t <= 110 -> o=14
 ]
 
-def invert_throttle_buckets(t):
-  # Reverse the function that buckets the throttle for neural net output.
+def bucket2throttle(t):
+    """ Reverse the function that buckets the throttle for neural net output """
     map_back = {5:90}
     t = int(float(t)+0.5)
     for ibucket,(max_in_bucket,bucket) in enumerate(throttle_map):
@@ -94,16 +82,17 @@ def invert_throttle_buckets(t):
             return max_in_bucket
     return 100 # Never happens, defensively select a mild acceleration
 
-# read a UYVY raw image and extract the Y plane - YUV 4:2:2 - (Y0,U0,Y1,V0),(Y2,U2,Y3,V2)
-def read_uyvy(filename, rows, cols):
-  fd = open(filename,'rb')
-  f = np.fromfile(fd, dtype=np.uint8, count=rows*cols*2)
-  f = f.reshape((rows * cols / 2), 4)
-
-  Y = np.empty((rows * cols), dtype=np.uint8)
-  Y[0::2] = f[:,0]
-  Y[1::2] = f[:,2]
-  return Y.reshape(rows,cols)
+def bucket2steering(a):
+    """ Reverse the function that buckets the steering for neural net output """
+    steer = a - 7
+    original = steer
+    steer = abs(steer)
+    steer = math.pow(2.0, steer)
+    steer -= 1.0
+    steer = math.copysign(steer, original)
+    steer += 90.0
+    steer = max(0, min(179, steer))
+    return steer
 
 if __name__ == "__main__":
   try:
@@ -166,8 +155,8 @@ if __name__ == "__main__":
     throttle = throttle[0]
 
     print steering, throttle
-    steering = invert_log_bucket(steering)
-    throttle = invert_throttle_buckets(throttle)
+    steering = bucket2steering(steering)
+    throttle = bucket2throttle(throttle)
     print steering, throttle
 
     key = cv2.waitKey(0)
