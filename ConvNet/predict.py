@@ -32,7 +32,7 @@ import sys
 import os
 import time
 import math
-from keras.models import Sequential
+#from keras.models import Sequential
 from keras.models import model_from_json
 
 # show an image in a proper scale
