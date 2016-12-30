@@ -48,13 +48,8 @@ def show_img(img):
   cv2.imshow('dst1_rt', img)  
   return
 
-
 def invert_log_bucket(a):
   # Reverse the function that buckets the steering for neural net output.
-  # This is half in filemash.py and a bit in convnet02.py (maybe I should fix)
-  # steers[-1] -= 90
-  # log_steer = math.copysign( math.log(abs(steers[-1])+1, 2.0) , steers[-1]) # 0  -> 0, 1  -> 1, -1 -> -1, 2  -> 1.58, -2 -> -1.58, 3  -> 2
-  # gtVal = gtArray[i] + 7
   steer = a - 7
   original = steer
   steer = abs(steer)
@@ -64,7 +59,6 @@ def invert_log_bucket(a):
   steer += 90.0
   steer = max(0, min(179, steer))
   return steer
-
 
 # convert throttle from [0,180] range to a bucket number in the [0.14] range using a map
 throttle_map = [
@@ -88,9 +82,9 @@ throttle_map = [
     [110,14]  # elif t <= 110 -> o=14
 ]
 
-map_back = {5:90}
-
 def invert_throttle_buckets(t):
+  # Reverse the function that buckets the throttle for neural net output.
+    map_back = {5:90}
     t = int(float(t)+0.5)
     for ibucket,(max_in_bucket,bucket) in enumerate(throttle_map):
         if t == bucket:
@@ -100,6 +94,16 @@ def invert_throttle_buckets(t):
             return max_in_bucket
     return 100 # Never happens, defensively select a mild acceleration
 
+# read a UYVY raw image and extract the Y plane - YUV 4:2:2 - (Y0,U0,Y1,V0),(Y2,U2,Y3,V2)
+def read_uyvy(filename, rows, cols):
+  fd = open(filename,'rb')
+  f = np.fromfile(fd, dtype=np.uint8, count=rows*cols*2)
+  f = f.reshape((rows * cols / 2), 4)
+
+  Y = np.empty((rows * cols), dtype=np.uint8)
+  Y[0::2] = f[:,0]
+  Y[1::2] = f[:,2]
+  return Y.reshape(rows,cols)
 
 if __name__ == "__main__":
   try:
