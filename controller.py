@@ -25,6 +25,7 @@ import subprocess
 
 import streamer
 import utils
+import numpy
 from keras.models import model_from_json
 
 class States:
@@ -204,7 +205,6 @@ class RCVehicle(object):
     self.log("Mode REMOTE")    
     return
 
-
   def start(self):
     """ Initial start """
     self.mode2training()
@@ -278,6 +278,9 @@ class RCVehicle(object):
     throttle_in=self.throttle
     mv = '/bin/mv /tmpfs/meta.tmp ' + TELEMFNAME
 
+    # Load a CNN model -- must be done in the same thread of the prediction
+    self.load_model(config['app_params']['model'])
+
     while True:
       now = time.time()
       #
@@ -322,12 +325,12 @@ class RCVehicle(object):
       elif self.state == States.RUNNING and self.mode == Modes.AUTO:
         # predict steering and trhottle and set the values at a rate depending on preditiction speed
         start_t = time.time()
-        Y = utils.read_uyvy(FRAMEFNAME)
-        # model img is of shape (1,240,320,1)
-        Y = Y.reshape(1, 240, 320, 1)
+        Y = utils.read_uyvy(FRAMEFNAME) # Y is of shape (1,240,320,1)
+        if Y == None:
+          continue
         # normalize the image values
         Y = Y / 255.
-
+        # predict steering and throttle
         p = self.model.predict(Y[0:1])
         print "execution time:", time.time() - start_t
         self.steering = np.argmax(p[:, :15],  1)[0]
@@ -341,6 +344,7 @@ class RCVehicle(object):
         if self.throttle < 80:
           self.throttle = 80
         self.output_arduino(self.steering, self.throttle)
+        time.sleep(0.005)
       #
       # ------------------------------------------------------------
       #

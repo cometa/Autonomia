@@ -59,12 +59,15 @@ def read_uyvy(filename, rows=240, cols=320):
     """ Read a UYVY raw image and extract the Y plane - YUV 4:2:2 - (Y0,U0,Y1,V0),(Y2,U2,Y3,V2) """
     fd = open(filename,'rb')
     f = np.fromfile(fd, dtype=np.uint8, count=rows*cols*2)
+    if len(f) != rows*cols*2:
+        # error in reading
+        return None
     f = f.reshape((rows * cols / 2), 4)
-
     Y = np.empty((rows * cols), dtype=np.uint8)
     Y[0::2] = f[:,0]
     Y[1::2] = f[:,2]
-    return Y.reshape(rows,cols)
+    # reshape as a tensor for model prediction
+    return Y.reshape(1, rows,cols, 1)
 
 def steering2bucket(s):
     """ Convert from [-90,90] range to a bucket number in the [0,14] range with log distribution to stretch the range of the buckets around 0 """
