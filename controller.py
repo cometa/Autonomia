@@ -100,6 +100,7 @@ class RCVehicle(object):
     self.steering=THETA_CENTER
     self.throttle=MOTOR_NEUTRAL
     self.serial=config['serial']
+    self.config = config
 
     # Set the system log
     self.log=logger
@@ -279,7 +280,7 @@ class RCVehicle(object):
     mv = '/bin/mv /tmpfs/meta.tmp ' + TELEMFNAME
 
     # Load a CNN model -- must be done in the same thread of the prediction
-    self.load_model(config['app_params']['model'])
+    self.load_model(self.config['app_params']['model'])
 
     while True:
       now = time.time()
