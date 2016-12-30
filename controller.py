@@ -323,7 +323,12 @@ class RCVehicle(object):
         # predict steering and trhottle and set the values at a rate depending on preditiction speed
         start_t = time.time()
         Y = utils.read_uyvy(FRAMEFNAME)
-        p = self.model.predict(Y)
+        # model img is of shape (1,240,320,1)
+        Y = Y.reshape(1, 240, 320, 1)
+        # normalize the image values
+        Y = Y / 255.
+
+        p = self.model.predict(Y[0:1])
         print "execution time:", time.time() - start_t
         self.steering = np.argmax(p[:, :15],  1)[0]
         self.throttle = np.argmax(p[:, 15:], 1)[0]
