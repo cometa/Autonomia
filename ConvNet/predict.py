@@ -115,7 +115,7 @@ if __name__ == "__main__":
   model = model_from_json(open("{}/autonomia_cnn.json".format(data_path)).read())
 
   # Load model weights
-  model.load_weights("{}/autonomia_cnn_weights.h5".format(data_path))
+  model.load_weights("{}/autonomia_cnn.h5".format(data_path))
 
   skip = 100
   for i,line in enumerate(labels):
