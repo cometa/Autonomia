@@ -104,7 +104,7 @@ def main(argv):
   # Create a car controller object
   car = RCVehicle(config, syslog)
   # Load a CNN model
-  car.load_model(config.app_params.model)
+  car.load_model(config['app_params']['model'])
   # Start the vehicle with default training mode 
   car.start()
 
