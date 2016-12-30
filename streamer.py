@@ -109,6 +109,8 @@ def video_start(telem):
     url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
     params = params + ['-threads', '4', '-r', '30', '-g', '60', '-f', 'flv', url]
     params = params + ['-vcodec', 'rawvideo', '-an', '-updatefirst', '1', '-y', '-f', 'image2', FRAMEFNAME]
+    # to transcode use format YUYV422:
+    # $ ffmpeg -vcodec rawvideo -s 320x240 -r 1 -pix_fmt  yuyv422  -i frame.yuv rawframe.jpg
     # spawn a process and do not wait
     pid = subprocess.Popen(params, stderr=FNULL)
   return pid
