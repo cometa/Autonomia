@@ -96,4 +96,4 @@ if __name__ == "__main__":
   with open("{}/autonomia_cnn.json".format(data_path), 'w') as f:
       f.write(model.to_json())
 
-  model.save_weights("{}/autonomia_cnn_weights.h5".format(data_path))
+  model.save_weights("{}/autonomia_cnn.h5".format(data_path))

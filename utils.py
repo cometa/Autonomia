@@ -51,6 +51,75 @@ def isanumber(x):
 
 def buildKey(mac, secret):
     """Return the camera streaming key."""
-    
     h = hmac.new(secret, message, digestmod=hashlib.sha256).hexdigest()
     return mac + '-' + h[0:32]
+
+def read_uyvy(filename, rows, cols):
+    """ Read a UYVY raw image and extract the Y plane - YUV 4:2:2 - (Y0,U0,Y1,V0),(Y2,U2,Y3,V2) """
+    fd = open(filename,'rb')
+    f = np.fromfile(fd, dtype=np.uint8, count=rows*cols*2)
+    f = f.reshape((rows * cols / 2), 4)
+
+    Y = np.empty((rows * cols), dtype=np.uint8)
+    Y[0::2] = f[:,0]
+    Y[1::2] = f[:,2]
+    return Y.reshape(rows,cols)
+
+def steering2bucket(s):
+    """ Convert from [-90,90] range to a bucket number in the [0,14] range with log distribution to stretch the range of the buckets around 0 """
+    s -= 90
+    return int(round(math.copysign(math.log(abs(s) + 1, 2.0), s))) + 7
+
+def bucket2steering(a):
+    """ Reverse the function that buckets the steering for neural net output """
+    steer = a - 7
+    original = steer
+    steer = abs(steer)
+    steer = math.pow(2.0, steer)
+    steer -= 1.0
+    steer = math.copysign(steer, original)
+    steer += 90.0
+    steer = max(0, min(179, steer))
+    return steer
+
+# throttle bucket conversion map -- from [0,180] range to a bucket number in the [0.14] range
+throttle_map = [
+    [80,0], # if t <= 80 -> o=0 # Breaking:
+    [82,1], # elif t <= 82 -> o=1
+    [84,2], # elif t <= 84 -> o=2
+    [86,3], # elif t <= 86 -> o=3
+    [87,4], # elif t <= 87 -> o=4 # Breaking ^
+    
+    [96,5], # elif t <= 96 -> o=5 # Neutral
+
+    [97,6], # elif t <= 97 -> o=6 # Forward:
+    [98,7], # elif t <= 98 -> o=7
+    [99,8], # elif t <= 99 -> o=8
+    [100,9], # elif t <= 100 -> o=9
+    
+    [101,10], # elif t <= 101 -> o=10
+    [102,11], # elif t <= 102 -> o=11
+    [105,12], # elif t <= 105 -> o=12
+    [107,13], # elif t <= 107 -> o=13
+    [110,14]  # elif t <= 110 -> o=14
+]
+
+def throttle2bucket(t):
+    """ Convert throttle from [0,180] range to a bucket number in the [0.14] range using a map. """
+
+    for max_in_bucket,bucket in throttle_map:
+        if t <= max_in_bucket:
+            return bucket
+    return 14
+
+def bucket2throttle(t):
+    """ Reverse the function that buckets the throttle for neural net output """
+    map_back = {5:90}
+    t = int(float(t)+0.5)
+    for ibucket,(max_in_bucket,bucket) in enumerate(throttle_map):
+        if t == bucket:
+            if map_back.has_key(bucket):
+                return map_back[bucket]
+
+            return max_in_bucket
+    return 100 # Never happens, defensively select a mild acceleration
