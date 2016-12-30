@@ -24,6 +24,8 @@ import threading
 import subprocess
 
 import streamer
+import utils
+from keras.models import model_from_json
 
 class States:
   """ Vehicle states """
@@ -43,6 +45,9 @@ THETA_CENTER = 90
 MOTOR_NEUTRAL = 90
 # filename to fetch telemetry from -- updated atomically by the controller loop at 30 Hz
 TELEMFNAME = '/tmpfs/meta.txt'
+
+# filename where to store the last frame -- used by the application loop and as parameter for the CNN prediction
+FRAMEFNAME = '/tmpfs/frame.yuv'
 
 def setup_arduino(config, logger):
   """ Arduino radio receiver and servos controller setup. """
@@ -99,6 +104,9 @@ class RCVehicle(object):
     self.log=logger
     self.verbose=config['app_params']['verbose']
 
+    # CNN predicting model
+    self.cnn_model = None
+
     self.arport=setup_arduino(config, self.log) 
     while self.arport == None:
       self.log("Fatal error setting up Arduino board. Cannot proceed without properly connecting to the control board.")
@@ -114,6 +122,18 @@ class RCVehicle(object):
     self.loop_t.daemon = True   # force to exit on SIGINT
 
     self.telemetry_period=config['app_params']['telemetry_period']
+    return
+
+  def load_model(self, modelpath):
+    """ Load a CNN model """
+    try:
+      self.model = model_from_json(open(modelpath + ".json".read()))
+      self.model.load_weights(modelpath + ".h5")
+    except Exception, e:
+      self.log("Failed to load CNN model %s. (%s)" % (modelpath,str(e)) )
+      return
+
+    self.log("Loaded CNN model %s." % modelpath)
     return
 
   def state2run(self):
@@ -300,9 +320,24 @@ class RCVehicle(object):
       # ------------------------------------------------------------
       #
       elif self.state == States.RUNNING and self.mode == Modes.AUTO:
-        # TODO: predict steering and trhottle and set the values 20-30 times per second (depending on preditiction speed)
-        time.sleep(1)
-      #      # ------------------------------------------------------------
+        # predict steering and trhottle and set the values at a rate depending on preditiction speed
+        start_t = time.time()
+        Y = utils.read_uyvy(FRAMEFNAME)
+        p = model.predict(Y)
+        print "execution time:", time.time() - start_t
+        self.steering = np.argmax(p[:, :15],  1)[0]
+        self.throttle = np.argmax(p[:, 15:], 1)[0]
+        self.steering = utils.bucket2steering(self.steering)
+        self.throttle = utils.bucket2throttle(self.throttle)
+        print self.steering, self.throttle
+        # clip the prediction for testing
+        if self.throttle > 110:
+          self.throttle = 110
+        if self.throttle < 80:
+          self.throttle = 80
+        self.output_arduino(self.steering, self.throttle)
+      #
+      # ------------------------------------------------------------
       #
       elif self.state == States.RUNNING and self.mode == Modes.REMOTE:
         self.output_arduino(self.steering, self.throttle)
