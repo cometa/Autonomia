@@ -98,14 +98,18 @@ def main(argv):
   if com.debug:
       print "Server returned:", ret
 
+  # Initialize camera streamer
   streamer.init(config, syslog)
 
+  # Create a car controller object
   car = RCVehicle(config, syslog)
+  # Load a CNN model
+  car.load_model(config.app_params.model)
   # Start the vehicle with default training mode 
   car.start()
 
   # Export the vechicle object to the API module
-  api.car= car
+  api.car = car
 
   last_second, last_telemetry = 0, 0
   while car.state:
