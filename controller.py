@@ -127,7 +127,7 @@ class RCVehicle(object):
   def load_model(self, modelpath):
     """ Load a CNN model """
     try:
-      self.model = model_from_json(open(modelpath + ".json".read()))
+      self.model = model_from_json(open(modelpath + ".json").read())
       self.model.load_weights(modelpath + ".h5")
     except Exception, e:
       self.log("Failed to load CNN model %s. (%s)" % (modelpath,str(e)) )
