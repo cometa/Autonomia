@@ -112,7 +112,7 @@ def main(argv):
   fnames = sorted(f)
   print "found %d jpg files in %s" % (len(fnames), dir)
 
-  out_file = open(argv[0] + 'labels.csv', 'w')
+  out_file = open(argv[0] + '/labels.csv', 'w')
 
   # Load model structure
   model = model_from_json(open('DigitsNet/digits_cnn.json').read())
