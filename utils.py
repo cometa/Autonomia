@@ -55,7 +55,8 @@ def buildKey(mac, secret):
     h = hmac.new(secret, message, digestmod=hashlib.sha256).hexdigest()
     return mac + '-' + h[0:32]
 
-def read_uyvy(filename, rows=240, cols=320):
+#def read_uyvy(filename, rows=240, cols=320):
+def read_uyvy(filename, rows=150, cols=320):
     """ Read a UYVY raw image and extract the Y plane - YUV 4:2:2 - (Y0,U0,Y1,V0),(Y2,U2,Y3,V2) """
     fd = open(filename,'rb')
     f = np.fromfile(fd, dtype=np.uint8, count=rows*cols*2)
@@ -63,7 +64,7 @@ def read_uyvy(filename, rows=240, cols=320):
         # error in reading
         return None
     f = f.reshape((rows * cols / 2), 4)
-    Y = np.empty((rows * cols), dtype=np.uint8)
+    Y = np.empty((rows * cols), dtype=np.float64)
     Y[0::2] = f[:,0]
     Y[1::2] = f[:,2]
     # reshape as a tensor for model prediction
