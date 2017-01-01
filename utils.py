@@ -63,10 +63,13 @@ def read_uyvy(filename, rows=150, cols=320):
     if len(f) != rows*cols*2:
         # error in reading
         return None
-    f = f.reshape((rows * cols / 2), 4)
-    Y = np.empty((rows * cols), dtype=np.float64)
+    f = f.reshape((240 * 320 / 2), 4)
+    Y = np.empty((240 * 320), dtype=np.float64)
     Y[0::2] = f[:,0]
     Y[1::2] = f[:,2]
+    # crop the top and the bottom
+    Y = Y[80:230,0:320]
+
     # reshape as a tensor for model prediction
     return Y.reshape(1, rows,cols, 1)
 
