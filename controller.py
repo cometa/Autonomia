@@ -346,7 +346,7 @@ class RCVehicle(object):
         print self.steering, self.throttle
         self.output_arduino(self.steering, self.throttle)
         dt = time.time() - start_t
-        time.sleep(0.034 - max(0.033, dt))
+        time.sleep(0.001) #0.034 - max(0.033, dt))
         print "execution time:", dt
       #
       # ------------------------------------------------------------

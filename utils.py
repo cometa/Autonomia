@@ -59,14 +59,15 @@ def buildKey(mac, secret):
 def read_uyvy(filename, rows=150, cols=320):
     """ Read a UYVY raw image and extract the Y plane - YUV 4:2:2 - (Y0,U0,Y1,V0),(Y2,U2,Y3,V2) """
     fd = open(filename,'rb')
-    f = np.fromfile(fd, dtype=np.uint8, count=rows*cols*2)
-    if len(f) != rows*cols*2:
+    f = np.fromfile(fd, dtype=np.uint8, count=240*320*2)
+    if len(f) != 320*240*2: #rows*cols*2
         # error in reading
         return None
     f = f.reshape((240 * 320 / 2), 4)
     Y = np.empty((240 * 320), dtype=np.float64)
     Y[0::2] = f[:,0]
     Y[1::2] = f[:,2]
+    Y = Y.reshape(240, 320)
     # crop the top and the bottom
     Y = Y[80:230,0:320]
 
