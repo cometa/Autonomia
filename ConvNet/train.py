@@ -37,6 +37,30 @@ def combined_crossentropy(y_true, y_pred):
     throttle_crossentropy = K.categorical_crossentropy(y_pred_throttle, y_true_throttle)
     return (steering_crossentropy + throttle_crossentropy) / 2.
 
+def create_model_relu():
+    model = Sequential()
+
+    model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode="same", input_shape=(row, col, ch)))
+    model.add(Activation('relu'))
+    model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode="same"))
+    model.add(Activation('relu'))
+    model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode="same"))
+    model.add(Flatten())
+    model.add(Dropout(.5))
+    model.add(Activation('relu'))
+    model.add(Dense(512, init='he_normal'))
+    model.add(Dropout(.5))
+    model.add(Activation('relu'))
+
+    model.add(Dense(num_outputs, init='he_normal'))
+    model.add(Activation('softmax'))
+
+    sgd = RMSprop(lr=0.001)
+    model.compile(optimizer=sgd, loss=combined_crossentropy, metrics=['accuracy'])
+
+    print('Model relu is created and compiled..')
+    return model
+
 def create_model_prelu():
     model = Sequential()
 
@@ -55,12 +79,10 @@ def create_model_prelu():
     model.add(Dense(num_outputs, init='he_normal'))
     model.add(Activation('softmax'))
 
-
     sgd = RMSprop(lr=0.001)
-#    model.compile(optimizer="adam", loss="mse")
     model.compile(optimizer=sgd, loss=combined_crossentropy, metrics=['accuracy'])
 
-    print('Model is created and compiled..')
+    print('Model prelu is created and compiled..')
     return model
 
 if __name__ == "__main__":
@@ -82,7 +104,7 @@ if __name__ == "__main__":
   batch_size = config.batch_size
   num_outputs = config.num_buckets * 2
 
-  model = create_model_prelu()
+  model = create_model_relu()
   print model.summary()
 
   print "loading images and labels"
