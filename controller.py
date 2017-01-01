@@ -328,6 +328,7 @@ class RCVehicle(object):
         start_t = time.time()
         Y = utils.read_uyvy(FRAMEFNAME) # Y is of shape (1,240,320,1)
         if Y is None:
+          print "image not acquired"
           continue
         # normalize the image values
         Y = Y / 255.
@@ -338,14 +339,14 @@ class RCVehicle(object):
         self.throttle = np.argmax(p[:, 15:], 1)[0]
         self.steering = utils.bucket2steering(self.steering)
         self.throttle = utils.bucket2throttle(self.throttle)
-        print self.steering, self.throttle
+	print self.steering, self.throttle
         # clip the prediction for testing
         if self.throttle > 110:
           self.throttle = 110
         if self.throttle < 80:
           self.throttle = 80
         self.output_arduino(self.steering, self.throttle)
-        time.sleep(0.005)
+        time.sleep(0.001)
       #
       # ------------------------------------------------------------
       #
