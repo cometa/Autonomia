@@ -334,19 +334,20 @@ class RCVehicle(object):
         Y = Y / 255.
         # predict steering and throttle
         p = self.model.predict(Y[0:1])
-        print "execution time:", time.time() - start_t
         self.steering = np.argmax(p[:, :15],  1)[0]
         self.throttle = np.argmax(p[:, 15:], 1)[0]
         self.steering = utils.bucket2steering(self.steering)
         self.throttle = utils.bucket2throttle(self.throttle)
-	print self.steering, self.throttle
         # clip the prediction for testing
         if self.throttle > 110:
           self.throttle = 110
         if self.throttle < 80:
           self.throttle = 80
+        print self.steering, self.throttle
         self.output_arduino(self.steering, self.throttle)
-        time.sleep(0.001)
+        dt = time.time() - start_t
+        time.sleep(0.034 - max(0.033, dt))
+        print "execution time:", dt
       #
       # ------------------------------------------------------------
       #
