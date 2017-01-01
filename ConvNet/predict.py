@@ -116,6 +116,7 @@ if __name__ == "__main__":
 
   # Load model weights
   model.load_weights("{}/autonomia_cnn.h5".format(data_path))
+  model.summary()
 
   skip = 100
   for i,line in enumerate(labels):
