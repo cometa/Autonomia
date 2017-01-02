@@ -1,21 +1,22 @@
 # Autonomia
-A project for a cloud connected, autonomous RC car to participate in the [DIY Robocars self-racing-cars events.](/home/oem/Autonomia-Video/1482616994a) The project makes extensive use of [Vederly](www.cometa.io), a video and device management platform for mobility applications developed by Visible Energy Inc.
+A project for a cloud connected, autonomous RC 1/10 scale electric car to participate in the [DIY Robocars self-racing-cars events.](/home/oem/Autonomia-Video/1482616994a) The project makes extensive use of [Vederly](www.cometa.io), a video and device management cloud platform for mobility applications developed by Visible Energy Inc.
 
 ## Running Modes
 The Autonomia vehicle has three running modes:
+
 1. Controlled by the radio remote control (RC)
 2. Controlled remotely through the Remote JSON/RPC API and the Vederly cloud servers
 3. Autonomously, driven by predictions of an end-to-end convolutional neural network (CNN)
 
-In any running mode, the vehicle is connected to the Vederly cloud servers using the [Cometa API](http://www.cometa.io/cometa-api.html) and is also streaming live video from the on-board camera at 30 frames per second.
+In any running mode, the vehicle is connected to the Vederly cloud servers using the [Cometa API](http://www.cometa.io/cometa-api.html). It is also remotely managed and responding to the commands in the JSON/RPC Remote API, as well streaming telemetry and live video from the on-board camera at 30 frames per second to the Vederly cloud managemengt platform.
 
 ## Hardware
-The hardware added to a commercial RC car, such as the Trexxas Stampede used in the initial implementation consists of:
+The hardware added to a commercial RC car, such as the [Trexxas Stampede](https://traxxas.com/products/models/electric/36054-1stampede?t=details) used in the initial implementation consists of:
+
 1. [Raspberry PI 3 model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/)
 2. [Arduino Nano](https://www.arduino.cc/en/Main/arduinoBoardNano)
 3. [Logitech C920 camera](http://www.logitech.com/en-us/product/hd-pro-webcam-c920)
 
-## 
 
 ###Dependencies
 
