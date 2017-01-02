@@ -1,7 +1,9 @@
-# Autonomia
-A project for a cloud connected, autonomous RC 1/10 scale electric car to participate in the [DIY Robocars self-racing-cars events.](https://www.meetup.com/Self-Racing-Cars/) The project makes extensive use of [Vederly](http://www.cometa.io), a video and device management cloud platform for mobility applications developed by Visible Energy Inc.
+![alt tag](https://img.shields.io/badge/python-2.7-blue.svg)
 
-The car controller software relies on a convolutional neural network, trained end-to-end using video from the camera, to drive itself predicting steering and throttle values from a live image.
+# Autonomia
+A project for a cloud connected, autonomous RC 1/10 scale electric car to participate in the [DIY Robocars self-racing-cars events.](https://www.meetup.com/Self-Racing-Cars/) The project makes extensive use of [Vederly](http://www.cometa.io), a video and device management cloud platform for mobility applications developed by `Visible Energy Inc.`
+
+The car controller software relies on a convolutional neural network, trained end-to-end using video from the camera and telemetry from the controller, to drive itself predicting steering and throttle values from a live image.
 
 **Video from the first test run:**
 
@@ -39,7 +41,7 @@ The Arduino Nano receives the throttle and steering inputs from the radio receiv
 
 The main application in `Python` consists of:
 
-1. an implementation of a JSON/RPC remote API to control the vehicle from the Vederly cloud
+1. an implementation of a `JSON/RPC` remote API to control the vehicle from the Vederly cloud
 2. a main car controller loop to operate the car motor and steering servos (through the Arduino interface)
 3. a neural network model in `Keras`, trained end-to-end to predict steering and throttle from images
 
@@ -49,7 +51,7 @@ The CNN training video and telemetry data are acquired with the car controlled m
 
 At any time together with live video, telemetry data are also sent at a selectable rate, to the Vederly cloud for use live in the GCS and to store for offline viewing.
 
-The trained Keras model is loaded at runtime and is evaluated in about 40 milliseconds or less, depending on the number of nodes in the network. The model is evaluating steering and throttle values from a raw YUV 4:2:2 encoded frame, acquired by the streamer and stored in a shared RAM filesystem. The evaluated steering and throttle are passed to the Arduino controller to set the proper values for the motor and steering servo. In the current implementation, no loopback control mechanism is in place.
+The trained `Keras` model (`Tensorflow` back-end) is loaded at runtime and is evaluated in about 40 milliseconds or less, depending on the number of nodes in the network. The model is evaluating steering and throttle values from a raw YUV 4:2:2 encoded frame, acquired by the streamer and stored in a shared RAM filesystem. The evaluated steering and throttle are passed to the Arduino controller to set the proper values for the motor and steering servo. In the current implementation, no loopback control mechanism is in place.
 
 ## Performance
 
@@ -69,3 +71,5 @@ Since the CNN training is happening in the cloud, an inexpensive Raspberry PI an
 ## Credits
 
 While we are using a radically different approach and a minimalistic hardware, credit is given to Otavio Good and the [Carputer](https://github.com/otaviogood/carputer) team for showing feasibility of using a CNN for 1/10 scale cars autonomous driving, and for providing very useful insights in relevant design choices.
+
+We also credit DYI Robocars' Chris Anderson for organizing and driving the self-driving cars open source movement.
