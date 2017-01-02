@@ -115,10 +115,10 @@ def main(argv):
   out_file = open(argv[0] + '/labels.csv', 'w')
 
   # Load model structure
-  model = model_from_json(open('DigitsNet/digits_cnn.json').read())
+  model = model_from_json(open('DataPrep/DigitsNet/digits_cnn.json').read())
 
   # Load model weights
-  model.load_weights('DigitsNet/digits_cnn_weights.h5')
+  model.load_weights('DataPrep/DigitsNet/digits_cnn_weights.h5')
 
   model.compile(loss='categorical_crossentropy',
                 optimizer='rmsprop',
