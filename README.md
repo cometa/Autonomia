@@ -1,6 +1,10 @@
 # Autonomia
 A project for a cloud connected, autonomous RC 1/10 scale electric car to participate in the [DIY Robocars self-racing-cars events.](https://www.meetup.com/Self-Racing-Cars/) The project makes extensive use of [Vederly](http://www.cometa.io), a video and device management cloud platform for mobility applications developed by Visible Energy Inc.
 
+The car controller software relies on a convolutional neural network, trained end-to-end using video from the camera, to drive itself predicting steering and throttle values from a live image.
+
+**Video from the first test run:**
+
 [![First Test Run](https://img.youtube.com/vi/f2dknc7g4Zc/0.jpg)](https://www.youtube.com/watch?v=f2dknc7g4Zc)
 ## Running Modes
 The Autonomia vehicle has three running modes:
