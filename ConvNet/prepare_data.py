@@ -41,7 +41,7 @@ import ntpath
 import math
 from config import DataConfig
 
-interactive = True
+interactive = False #True
 
 # show an image in a proper scale
 def show_gray(img):
@@ -113,7 +113,7 @@ if __name__ == "__main__":
   print "found %d labels" % nlabels
 
   # telemetry is ahead of `skip` number of frames
-  skip = 1
+  skip = 1 #1
 
   # array of all images - width 240, height 
   X = np.zeros(shape=(nlabels - skip, img_height, img_width, num_channels), dtype=np.float64)
@@ -144,7 +144,6 @@ if __name__ == "__main__":
     # extract Y plane
     Y_img, _, _ = cv2.split(gray_img)
     Y_img = Y_img[80:230,0:320]
-    print "Y_img", Y_img.shape, len(Y_img)
 
     if interactive: show_gray(Y_img)
     # Y_img is of shape (240,320,1)
