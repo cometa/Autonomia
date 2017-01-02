@@ -57,10 +57,10 @@ Since the CNN training is happening in the cloud, an inexpensive Raspberry PI an
 
 ## Documentation
 
-* [Remote cloud API](../blob/master/docs/remote-api.md)
-* [CNN training pipeline](../blob/master/ConvNet/README.md)
-* [Arduino controller](../blob/master/Arduino/README.md)
-* [Dependencies](../blob/master/docs/dependencies.md)
+* [Remote cloud API](../master/docs/remote-api.md) 
+* [CNN training pipeline](../master/ConvNet/README.md)
+* [Arduino controller](../master/Arduino/README.md)
+* [Dependencies](../master/docs/dependencies.md)
 
 ## Credits
 
