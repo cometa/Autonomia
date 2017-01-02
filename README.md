@@ -18,7 +18,7 @@ The Autonomia vehicle has three running modes:
 In any running mode, the vehicle is connected to the Vederly cloud servers using the [Cometa API](http://www.cometa.io/cometa-api.html). It is also remotely managed and responding to the commands in the JSON/RPC Remote API, as well streaming telemetry and live video from the on-board camera to the Vederly cloud managemengt platform.
 
 ## Hardware
-The hardware added to a commercial 1/10 scale RC car, such as the [Traxxas Stampede](https://traxxas.com/products/models/electric/36054-1stampede?t=details) used in the first model consists of:
+The hardware added to a commercial 1/10 scale RC car, such as the [Traxxas Stampede](https://traxxas.com/products/models/electric/36054-1stampede?t=details) used in the first model, consists of:
 
 1. [Raspberry PI 3 model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) with a 8GB SD card
 2. [Arduino Nano](https://www.arduino.cc/en/Main/arduinoBoardNano)
@@ -31,7 +31,7 @@ Optional:
 2. [Adafruit 9 DFO Inertial Measurements Unit RPI shield](https://www.adafruit.com/products/2472)
 3. [Maxbotix Ultrasonic Rangefinder](https://www.adafruit.com/products/172)
 
-No changes have been done to the car chassis. The Arduino Nano is mounted on a protoboard and anchored with one of the screws used for the RC receiver. The camera is tight with a strap tiedown to the roof. The RPI is inside an enclosure and attached to the bottom of the chassis with a strap tiedown.
+No changes have been made to the car chassis. The Arduino Nano is mounted on a protoboard and anchored with one of the screws used for the RC receiver. The camera is tight with a strap tiedown to the roof. The RPI is inside an enclosure and attached to the bottom of the chassis with a strap tiedown.
 
 Power is supplied by the NiHM 3000 mAhr standard battery or a Lipo 5800 mAhr battery with a Y cable to power the RPI through an automotive DC-DC step-down power supply. The Arduino, camera and GPS are powered from their USB connections to the RPI.
 
@@ -51,7 +51,7 @@ The CNN training video and telemetry data are acquired with the car controlled m
 
 At any time together with live video, telemetry data are also sent at a selectable rate, to the Vederly cloud for use live in the GCS and to store for offline viewing.
 
-The trained `Keras` model (`Tensorflow` back-end) is loaded at runtime and is evaluated in about 40 milliseconds or less, depending on the number of nodes in the network. The model is evaluating steering and throttle values from a raw YUV 4:2:2 encoded frame, acquired by the streamer and stored in a shared RAM filesystem. The evaluated steering and throttle are passed to the Arduino controller to set the proper values for the motor and steering servo. In the current implementation, no loopback control mechanism is in place.
+The trained `Keras` model (`Tensorflow` back-end) is loaded at runtime and is evaluated in about 40 milliseconds or less, depending on the number of nodes in the network. The model is evaluating steering and throttle values from a `YUV 4:2:2` encoded frame, acquired by the streamer at 30 fps, and shared in a RAM filesystem. The evaluated steering and throttle are passed to the Arduino controller to set the proper values for the motor and steering servos. In the current implementation, no loopback control mechanism is in place.
 
 ## Performance
 
@@ -67,6 +67,14 @@ Since the CNN training is happening in the cloud, an inexpensive Raspberry PI an
 * [CNN training pipeline](../master/ConvNet/README.md)
 * [Arduino controller](../master/Arduino/README.md)
 * [Dependencies](../master/docs/dependencies.md)
+
+## Cloud Server and API
+The Autonomia application uses Vederly, a video and device management cloud platform for mobility applications, including a two-way message broker for device-to-cloud and cloud-to-device secure communication. It runs on a server in the cloud and it uses HTTPS and secure WebSockets for efficient remote interaction of applications and vehicles.
+
+The main application manages the connection to the Vederly server as defined in the `config.json` parameters file, streams video using RTMP to the server, and exposes methods for JSON-RPC remote procedure calls to the vehicle. 
+
+If you are interested in receiving beta tester credentials and access to a Vederly cloud server for testing the Autonomia software or the cloud API send an email to cometa@visiblenergy.com
+>Teams participating to the `DYI Robocars` events can obtain free use of the Vederly server and storage (within limits).
 
 ## Credits
 
