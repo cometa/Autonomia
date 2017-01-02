@@ -37,18 +37,54 @@ def combined_crossentropy(y_true, y_pred):
     throttle_crossentropy = K.categorical_crossentropy(y_pred_throttle, y_true_throttle)
     return (steering_crossentropy + throttle_crossentropy) / 2.
 
-def create_model_relu():
+def create_model_relu2():
+    # size of pooling area for max pooling
+    pool_size = (2, 2)
+
     model = Sequential()
 
     model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode="same", input_shape=(row, col, ch)))
     model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=pool_size))
+
+    model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode="same"))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=pool_size))
+
+    model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode="same"))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=pool_size))
+
+    model.add(Flatten())
+    model.add(Dense(256, init='he_normal'))
+    model.add(Activation('relu'))
+    model.add(Dropout(.25))
+
+    model.add(Dense(num_outputs, init='he_normal'))
+    model.add(Activation('softmax'))
+
+    sgd = RMSprop(lr=0.001)
+    model.compile(optimizer=sgd, loss=combined_crossentropy, metrics=['accuracy'])
+
+    print('Model relu2 is created and compiled..')
+    return model
+
+def create_model_relu():
+    pool_size = (2, 2)
+    model = Sequential()
+
+    model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode="same", input_shape=(row, col, ch)))
+    model.add(Activation('relu'))
+    # model.add(MaxPooling2D(pool_size=pool_size)) #added
+
     model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode="same"))
     model.add(Activation('relu'))
     model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode="same"))
     model.add(Flatten())
     model.add(Dropout(.5))
     model.add(Activation('relu'))
-    model.add(Dense(512, init='he_normal'))
+#    model.add(Dense(512, init='he_normal'))
+    model.add(Dense(256, init='he_normal')) #mod
     model.add(Dropout(.5))
     model.add(Activation('relu'))
 
@@ -56,6 +92,7 @@ def create_model_relu():
     model.add(Activation('softmax'))
 
     sgd = RMSprop(lr=0.001)
+#    sgd = Adam(lr=0.001)  #mod
     model.compile(optimizer=sgd, loss=combined_crossentropy, metrics=['accuracy'])
 
     print('Model relu is created and compiled..')
@@ -112,7 +149,7 @@ if __name__ == "__main__":
   y1_steering = np.load("{}/y1_steering.npy".format(data_path))
   y2_throttle = np.load("{}/y2_throttle.npy".format(data_path))
 
-  model.fit(X, np.append(y1_steering, y2_throttle, axis=1), batch_size=batch_size, nb_epoch=30, verbose=1, validation_split=0.1)
+  model.fit(X, np.append(y1_steering, y2_throttle, axis=1), batch_size=batch_size, nb_epoch=30, verbose=1, validation_split=0.05)
 
   print "saving model and weights"
   with open("{}/autonomia_cnn.json".format(data_path), 'w') as f:
