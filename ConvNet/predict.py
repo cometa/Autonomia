@@ -136,8 +136,12 @@ if __name__ == "__main__":
     gray_img =  cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB) 
     # extract Y plane
     Y_img, _, _ = cv2.split(gray_img)
+
+    Y_img = Y_img[80:230,0:320]
     # Y_img is of shape (1,240,320,1)
-    Y_img = Y_img.reshape(1, 240, 320, 1)
+#    Y_img = Y_img.reshape(1, 240, 320, 1)
+    Y_img = Y_img.reshape(1, 150, 320, 1)
+    
     # normalize the image values
     Y_img = Y_img / 255.
 
