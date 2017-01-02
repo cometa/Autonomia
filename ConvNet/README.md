@@ -8,7 +8,7 @@ To acquire video for CNN training, the `video_start` method must be called with 
 
 **Example of image with telemetry:**
 
-![Image with telemetry](../master/docsimg00455.jpg "image with telemetry")
+![Image with telemetry](../master/docs/img00455.jpg "image with telemetry")
 
 > `steering` and `trhottle` values are in the `[0,180]` range with `90` as neutral. This is the values received by the RC radio receiver and captured by the Arduino controller.
 
