@@ -110,7 +110,7 @@ def main(argv):
   # scan directory 
   f = scan_dir(argv[0])
   fnames = sorted(f)
-  print "found %d jpg files in %s" % (len(fnames), dir)
+  print("found %d jpg files in %s" % (len(fnames), dir) )
 
   out_file = open(argv[0] + '/labels.csv', 'w')
 
@@ -133,7 +133,7 @@ def main(argv):
 
     digit_imgs = get_digits(roi)
     if len(digit_imgs) != 6:
-      print "ERROR: less than six digits in the image"
+      print("ERROR: less than six digits in the image")
       key = cv2.waitKey(0)
       continue
 
@@ -148,7 +148,7 @@ def main(argv):
     steering = digits[0] * 10**2 + digits[1] * 10 + digits[2]
     throttle = digits[3] * 10**2 + digits[4] * 10 + digits[5]
 
-    print filename, steering, throttle
+    print(filename, steering, throttle)
     out_file.write("%s,%d,%d\n" % (ntpath.basename(filename), steering, throttle))
 
     if interactive:

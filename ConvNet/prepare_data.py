@@ -94,12 +94,12 @@ if __name__ == "__main__":
 
   try:
     data_path = os.path.expanduser(sys.argv[1])
-  except Exception, e:
-    print "Usage: ./prepare_data.py <DATA-DIR>"
+  except Exception as e:
+    print("Usage: ./prepare_data.py <DATA-DIR>")
     sys.exit(-1)
 
   if not os.path.exists(data_path):
-    print "Directory %s not found." % data_path
+    print("Directory %s not found." % data_path)
     sys.exit(-1)
 
   row, col = config.img_height, config.img_width
@@ -110,7 +110,7 @@ if __name__ == "__main__":
   with open("{}/labels.csv".format(data_path)) as f:
     labels = f.readlines()
   nlabels = len(labels)
-  print "found %d labels" % nlabels
+  print("found %d labels" % nlabels)
 
   # telemetry is ahead of `skip` number of frames
   skip = 1 #1
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     steering = int(steering)
     # throttle
     throttle = int(throttle)
-    print filename, steering, throttle
+    print(filename, steering, throttle)
 
     img = cv2.imread(filename)
     # convert to grayscale
@@ -146,6 +146,7 @@ if __name__ == "__main__":
     Y_img = Y_img[80:230,0:320]
 
     if interactive: show_gray(Y_img)
+    print(index)
     # Y_img is of shape (240,320,1)
     Y_img = Y_img.reshape(1, img_height, img_width, num_channels)
     # normalize the image values
@@ -165,9 +166,9 @@ if __name__ == "__main__":
   if not os.path.exists(outpath):
       os.makedirs(outpath)
 
-  print "saving images numpy array in: %s/X_yuv_gray.npy" % outpath 
+  print("saving images numpy array in: %s/X_yuv_gray.npy" % outpath )
   np.save("{}/X_yuv_gray".format(outpath), X)
-  print "saving steering numpy array in: %s/y1_steering.npy" % outpath 
+  print("saving steering numpy array in: %s/y1_steering.npy" % outpath )
   np.save("{}/y1_steering".format(outpath), y1)
-  print "saving throttle numpy array in: %s/y2_throttle.npy" % outpath 
+  print("saving throttle numpy array in: %s/y2_throttle.npy" % outpath )
   np.save("{}/y2_throttle".format(outpath), y2)

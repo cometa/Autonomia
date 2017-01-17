@@ -19,11 +19,11 @@ limitations under the License.
 import numpy as np
 import sys
 import os
-from keras.models import Sequential
+#from keras.models import Sequential, Graph
 from keras.optimizers import SGD, RMSprop, Adagrad, Adam
 from keras.layers.core import Dense, Dropout, Activation
-from keras.layers import Convolution2D, MaxPooling2D, AveragePooling2D, Flatten, PReLU
-
+from keras.layers import Input, Convolution2D, MaxPooling2D, AveragePooling2D, Flatten, PReLU
+from keras.models import Sequential, Model
 from config import TrainConfig
 from keras import backend as K
 
@@ -36,6 +36,11 @@ def combined_crossentropy(y_true, y_pred):
     steering_crossentropy = K.categorical_crossentropy(y_pred_steering, y_true_steering)
     throttle_crossentropy = K.categorical_crossentropy(y_pred_throttle, y_true_throttle)
     return (steering_crossentropy + throttle_crossentropy) / 2.
+
+
+
+
+
 
 def create_model_relu2():
     # size of pooling area for max pooling
@@ -122,36 +127,57 @@ def create_model_prelu():
     print('Model prelu is created and compiled..')
     return model
 
+
+def create_model_2softmax(img_size):
+    
+    pool_size = (2, 2)
+    print('Number of outputs:', num_outputs)
+    img_input = Input(shape=(150, 320, 1))
+    x = Convolution2D(16, 5, 5, subsample=(2, 2), border_mode="same", activation='relu')(img_input)
+    x = MaxPooling2D(pool_size=pool_size)(x)
+    #x = Dropout(0.5)(x)
+    x = Convolution2D(32, 2, 2, subsample=(1, 1), border_mode="same", activation='relu')(x)
+    x = MaxPooling2D(pool_size=pool_size)(x)
+    x = Flatten()(x)
+    x = Dense(128, activation='relu')(x)
+    #x = Dropout(0.33)(x)
+    o_st = Dense(num_outputs, activation='softmax', name='o_st')(x)
+    o_thr = Dense(num_outputs, activation='softmax', name='o_thr')(x)
+    model = Model(input=img_input, output=[o_st, o_thr])
+    model.compile(optimizer='adam', loss={'o_st': 'categorical_crossentropy', 'o_thr': 'categorical_crossentropy'}, metrics=['accuracy'])
+
+    return model
+
 if __name__ == "__main__":
   config = TrainConfig()
 
   try:
     data_path = os.path.expanduser(sys.argv[1])
-  except Exception, e:
-    print e, "Usage: ./prepare_data.py <DATA-DIR>"
+  except Exception as e:
+    print(e, "Usage: ./prepare_data.py <DATA-DIR>")
     sys.exit(-1)
 
   if not os.path.exists(data_path):
-    print "Directory %s not found." % data_path
+    print("Directory %s not found." % data_path)
     sys.exit(-1)
 
   row, col = config.img_height, config.img_width
   ch = config.num_channels
   num_epoch = config.num_epoch
   batch_size = config.batch_size
-  num_outputs = config.num_buckets * 2
+  num_outputs = config.num_buckets * 1
 
-  model = create_model_relu()
-  print model.summary()
+  model = create_model_2softmax( (row, col, ch) )
+  print(model.summary())
 
-  print "loading images and labels"
-  X = np.load("{}/X_yuv_gray.npy".format(data_path))
+  print("loading images and labels")
+  X = np.load("{}/X_yuv_gray.npy".format(data_path))-0.5
   y1_steering = np.load("{}/y1_steering.npy".format(data_path))
   y2_throttle = np.load("{}/y2_throttle.npy".format(data_path))
+  # and trained it via:
+  history = model.fit(X, {'o_st': y1_steering, 'o_thr': y2_throttle}, batch_size=batch_size, nb_epoch=30, verbose=1, validation_split=0.30 )
 
-  model.fit(X, np.append(y1_steering, y2_throttle, axis=1), batch_size=batch_size, nb_epoch=30, verbose=1, validation_split=0.05)
-
-  print "saving model and weights"
+  print("saving model and weights")
   with open("{}/autonomia_cnn.json".format(data_path), 'w') as f:
       f.write(model.to_json())
 
