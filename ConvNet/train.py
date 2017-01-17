@@ -27,6 +27,7 @@ from keras.models import Sequential, Model
 from config import TrainConfig
 from keras import backend as K
 
+
 def combined_crossentropy(y_true, y_pred):
     y_true_steering = y_true[:, :num_outputs]
     y_true_throttle = y_true[:, num_outputs:]
@@ -129,10 +130,10 @@ def create_model_prelu():
 
 
 def create_model_2softmax(img_size):
-    
+    keep_rate = 0.5
     pool_size = (2, 2)
     print('Number of outputs:', num_outputs)
-    img_input = Input(shape=(150, 320, 1))
+    img_input = Input(shape= img_size)
     x = Convolution2D(16, 5, 5, subsample=(2, 2), border_mode="same", activation='relu')(img_input)
     x = MaxPooling2D(pool_size=pool_size)(x)
     #x = Dropout(0.5)(x)
@@ -140,6 +141,7 @@ def create_model_2softmax(img_size):
     x = MaxPooling2D(pool_size=pool_size)(x)
     x = Flatten()(x)
     x = Dense(128, activation='relu')(x)
+    x = Dropout(keep_rate)(x)
     #x = Dropout(0.33)(x)
     o_st = Dense(num_outputs, activation='softmax', name='o_st')(x)
     o_thr = Dense(num_outputs, activation='softmax', name='o_thr')(x)
@@ -168,6 +170,8 @@ if __name__ == "__main__":
   num_outputs = config.num_buckets * 1
 
   model = create_model_2softmax( (row, col, ch) )
+  #This will plot a graph of the model and save it to a file:
+  plot(model, to_file='create_model_2softmax.png')
   print(model.summary())
 
   print("loading images and labels")
