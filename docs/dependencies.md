@@ -7,6 +7,12 @@ $ sudo apt-get install libpython2.7-dev
 ```
 $ pip install http_parser
 $ pip install pynmea2
+
+$pip install tensorflow
+$pip install keras
+$ sudo apt-get install python-opencv
+$ pip install h5py
+
 ```
 FFmpeg:
 Add `OpenMAX Integration Layer` hardware acceleration support:
