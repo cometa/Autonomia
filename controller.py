@@ -333,8 +333,8 @@ class RCVehicle(object):
         # normalize the image values
         Y = Y / 255.
 
-        # predict steering and throttle 
-        s, t = model.predict(Y_img[0:1])
+        # predict steering and throttle
+        s, t = self.model.predict(Y_img[0:1])
         self.steering = np.argmax(s[0])
         self.throttle = np.argmax(t[0])
 
