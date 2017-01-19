@@ -149,15 +149,17 @@ if __name__ == "__main__":
     show_img(img)
     now = time.time()
     # predict steering and throttle
-    p = model.predict(Y_img[0:1])
+#    p = model.predict(Y_img[0:1])
+    steering, throttle = model.predict(Y_img[0:1])
     t = time.time() - now
     print "execution time:", t
-    steering = np.argmax(p[:, :15],  1)
-    throttle = np.argmax(p[:, 15:], 1)
-    print p[0, :15]
-    print p[0, 15:]
-    steering = steering[0]
-    throttle = throttle[0]
+#    steering = np.argmax(p[:, :15],  1)
+#    throttle = np.argmax(p[:, 15:], 1)
+#    print p[0, :15]
+#    print p[0, 15:]
+
+    steering = np.argmax(steering[0])
+    throttle = np.argmax(throttle[0])
 
     print steering, throttle
     steering = bucket2steering(steering)
