@@ -326,22 +326,14 @@ class RCVehicle(object):
       elif self.state == States.RUNNING and self.mode == Modes.AUTO:
         # predict steering and trhottle and set the values at a rate depending on preditiction speed
         start_t = time.time()
-        Y = utils.read_uyvy(FRAMEFNAME) # Y is of shape (1,240,320,1)
+        Y = utils.read_uyvy(FRAMEFNAME) # Y is of shape (1, 150, 320, 1)
         if Y is None:
           print "image not acquired"
           continue
-
-        # crop top and bottom
-        Y = Y[80:230,0:320]
-        # reshape
-        Y = Y.reshape(1, 150, 320, 1)
         # normalize the image values
         Y = Y / 255.
 
-        # predict steering and throttle
-        #p = self.model.predict(Y[0:1])
-        #self.steering = np.argmax(p[:, :15],  1)[0]
-        #self.throttle = np.argmax(p[:, 15:], 1)[0]
+        # predict steering and throttle 
         s, t = model.predict(Y_img[0:1])
         self.steering = np.argmax(s[0])
         self.throttle = np.argmax(t[0])
