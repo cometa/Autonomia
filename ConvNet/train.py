@@ -27,6 +27,7 @@ from keras.models import Sequential, Model
 from config import TrainConfig
 from keras import backend as K
 
+from sklearn.utils import shuffle
 
 def combined_crossentropy(y_true, y_pred):
     y_true_steering = y_true[:, :num_outputs]
@@ -171,13 +172,14 @@ if __name__ == "__main__":
 
   model = create_model_2softmax( (row, col, ch) )
   #This will plot a graph of the model and save it to a file:
-  plot(model, to_file='create_model_2softmax.png')
+  #plot(model, to_file='create_model_2softmax.png')
   print(model.summary())
 
   print("loading images and labels")
   X = np.load("{}/X_yuv_gray.npy".format(data_path))-0.5
   y1_steering = np.load("{}/y1_steering.npy".format(data_path))
   y2_throttle = np.load("{}/y2_throttle.npy".format(data_path))
+  X, y1_steering, y2_throttle = shuffle(X, y1_steering, y2_throttle)
   # and trained it via:
   history = model.fit(X, {'o_st': y1_steering, 'o_thr': y2_throttle}, batch_size=batch_size, nb_epoch=30, verbose=1, validation_split=0.30 )
 
