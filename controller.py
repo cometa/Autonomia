@@ -330,21 +330,33 @@ class RCVehicle(object):
         if Y is None:
           print "image not acquired"
           continue
+
+        # crop top and bottom
+        Y = Y[80:230,0:320]
+        # reshape
+        Y = Y.reshape(1, 150, 320, 1)
         # normalize the image values
         Y = Y / 255.
+
         # predict steering and throttle
-        p = self.model.predict(Y[0:1])
-        self.steering = np.argmax(p[:, :15],  1)[0]
-        self.throttle = np.argmax(p[:, 15:], 1)[0]
+        #p = self.model.predict(Y[0:1])
+        #self.steering = np.argmax(p[:, :15],  1)[0]
+        #self.throttle = np.argmax(p[:, 15:], 1)[0]
+        s, t = model.predict(Y_img[0:1])
+        self.steering = np.argmax(s[0])
+        self.throttle = np.argmax(t[0])
+
         self.steering = utils.bucket2steering(self.steering)
         self.throttle = utils.bucket2throttle(self.throttle)
+
         # clip the prediction for testing
         if self.throttle > 110:
           self.throttle = 110
         if self.throttle < 80:
           self.throttle = 80
-        print self.steering, self.throttle
+
         self.output_arduino(self.steering, self.throttle)
+        print self.steering, self.throttle
         dt = time.time() - start_t
         time.sleep(0.001) #0.034 - max(0.033, dt))
         print "execution time:", dt
