@@ -79,17 +79,22 @@ def main(argv):
   com.bind_cb(api.message_handler)
 
   # Attach the device to Cometa
-  ret = com.attach(device_id, "Autonomia")
-  if com.error != 0:
-      print "(FATAL) Error in attaching to Cometa.", com.perror()
-      sys.exit(2)
+  connected = False
 
-  # Get the timestamp from the server
-  try:
-      ret_obj = json.loads(ret)
-  except Exception, e:
-      print "(FATAL) Error in parsing the message returned after attaching to Cometa. Message:", ret
-      sys.exit(2)
+  while !connected:
+    ret = com.attach(device_id, "Autonomia")
+    if com.error != 0:
+        print "Error in attaching to Cometa. Retrying ...", com.perror()
+        time.sleep(1)
+        continue
+    # Get the timestamp from the server
+    try:
+        ret_obj = json.loads(ret)
+    except Exception, e:
+        print "Error in parsing the message returned after attaching to Cometa. Message:", ret
+        time.sleep(1)
+        continue
+    connected = True
 
   # The server returns an object like: {"msg":"200 OK","heartbeat":60,"timestamp":1441405206}
   syslog("Device \"%s\" attached to Cometa. Server timestamp: %d" % (device_id, ret_obj['timestamp']))
