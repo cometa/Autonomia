@@ -153,9 +153,9 @@ def create_relu_2softmax(img_size):
   img_input = Input(shape= img_size)
   x = Convolution2D(16, 8, 8, subsample=(2,2), border_mode="same", activation='relu')(img_input)
   x = MaxPooling2D(pool_size=pool_size)(x)
-  x = Convolution2D(32, 5, 5, subsample=(2,2), border_mode="same", activation='relu')(img_input)
+  x = Convolution2D(32, 5, 5, subsample=(2,2), border_mode="same", activation='relu')(x)
   x = MaxPooling2D(pool_size=pool_size)(x)
-  x = Convolution2D(64, 5, 5, subsample=(2,2), border_mode="same", activation='relu')(img_input)
+  x = Convolution2D(64, 5, 5, subsample=(2,2), border_mode="same", activation='relu')(x)
   x = MaxPooling2D(pool_size=pool_size)(x)
   x = Flatten()(x)
   x = Dense(256, activation='relu')(x)
@@ -190,7 +190,6 @@ if __name__ == "__main__":
 
 #  model = create_model_2softmax( (row, col, ch) )
   model = create_relu_2softmax( (row, col, ch) )
-
 
   #This will plot a graph of the model and save it to a file:
   #plot(model, to_file='create_model_2softmax.png')
