@@ -39,11 +39,6 @@ def combined_crossentropy(y_true, y_pred):
     throttle_crossentropy = K.categorical_crossentropy(y_pred_throttle, y_true_throttle)
     return (steering_crossentropy + throttle_crossentropy) / 2.
 
-
-
-
-
-
 def create_model_relu2():
     # size of pooling area for max pooling
     pool_size = (2, 2)
@@ -151,6 +146,29 @@ def create_model_2softmax(img_size):
 
     return model
 
+def create_relu_2softmax(img_size):
+  keep_rate = 0.5
+  pool_size = (2, 2)
+
+  img_input = Input(shape= img_size)
+  x = Convolution2D(16, 8, 8, subsample=(2,2), border_mode="same", activation='relu')(img_input)
+  x = MaxPooling2D(pool_size=pool_size)(x)
+  x = Convolution2D(32, 5, 5, subsample=(2,2), border_mode="same", activation='relu')(img_input)
+  x = MaxPooling2D(pool_size=pool_size)(x)
+  x = Convolution2D(64, 5, 5, subsample=(2,2), border_mode="same", activation='relu')(img_input)
+  x = MaxPooling2D(pool_size=pool_size)(x)
+  x = Flatten()(x)
+  x = Dense(256, activation='relu')(x)
+  x = Dropout(keep_rate)(x)
+  o_st = Dense(num_outputs, activation='softmax', name='o_st')(x)
+  o_thr = Dense(num_outputs, activation='softmax', name='o_thr')(x)
+  model = Model(input=img_input, output=[o_st, o_thr])
+  sgd = RMSprop(lr=0.001)
+  model.compile(optimizer=sgd, loss={'o_st': 'categorical_crossentropy', 'o_thr': 'categorical_crossentropy'}, metrics=['accuracy'])
+
+  print('Model relu2softmax is created and compiled..')
+  return model
+
 if __name__ == "__main__":
   config = TrainConfig()
 
@@ -170,7 +188,10 @@ if __name__ == "__main__":
   batch_size = config.batch_size
   num_outputs = config.num_buckets * 1
 
-  model = create_model_2softmax( (row, col, ch) )
+#  model = create_model_2softmax( (row, col, ch) )
+  model = create_relu_2softmax( (row, col, ch) )
+
+
   #This will plot a graph of the model and save it to a file:
   #plot(model, to_file='create_model_2softmax.png')
   print(model.summary())
@@ -184,7 +205,7 @@ if __name__ == "__main__":
   history = model.fit(X, {'o_st': y1_steering, 'o_thr': y2_throttle}, batch_size=batch_size, nb_epoch=30, verbose=1, validation_split=0.30 )
 
   print("saving model and weights")
-  with open("{}/autonomia_cnn.json".format(data_path), 'w') as f:
+  with open("{}/autonomia_relu2sm_cnn.json".format(data_path), 'w') as f:
       f.write(model.to_json())
 
-  model.save_weights("{}/autonomia_cnn.h5".format(data_path))
+  model.save_weights("{}/autonomia_relu2sm_cnn.h5".format(data_path))
