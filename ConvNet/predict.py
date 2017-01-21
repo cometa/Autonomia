@@ -70,6 +70,19 @@ throttle_map = [
     [110,14]  # elif t <= 110 -> o=14
 ]
 
+
+# convert from [-90,90] range to a bucket number in the [0,14] range with log distribution to stretch the range of the buckets around 0.
+def steering2bucket(s):
+    s -= 90
+    return int(round(math.copysign(math.log(abs(s) + 1, 2.0), s))) + 7
+
+def throttle2bucket(t):
+  for max_in_bucket,bucket in throttle_map:
+      if t <= max_in_bucket:
+          return bucket
+  return 14
+
+
 def bucket2throttle(t):
     """ Reverse the function that buckets the throttle for neural net output """
     map_back = {5:90}
@@ -84,7 +97,7 @@ def bucket2throttle(t):
 
 def bucket2steering(a):
     """ Reverse the function that buckets the steering for neural net output """
-    steer = a - 7
+    steer = int(a) - 7
     original = steer
     steer = abs(steer)
     steer = math.pow(2.0, steer)
@@ -129,7 +142,7 @@ if __name__ == "__main__":
     steering = int(steering)
     # throttle
     throttle = int(throttle)
-    print filename, steering, throttle
+    print filename, steering, throttle, steering2bucket(steering), throttle2bucket(throttle)
     # load image
     img = cv2.imread(filename)
     # convert to grayscale
@@ -138,15 +151,16 @@ if __name__ == "__main__":
     Y_img, _, _ = cv2.split(gray_img)
 
     Y_img = Y_img[80:230,0:320]
+ 
+   # show image
+    show_img(Y_img)
+
     # Y_img is of shape (1,240,320,1)
-#    Y_img = Y_img.reshape(1, 240, 320, 1)
-    Y_img = Y_img.reshape(1, 150, 320, 1)
-    
+    Y_img = Y_img.reshape(1, 150, 320, 1) 
+
     # normalize the image values
     Y_img = Y_img / 255.
-
-    # show image
-    show_img(img)
+ 
     now = time.time()
     # predict steering and throttle
 #    p = model.predict(Y_img[0:1])
