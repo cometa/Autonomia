@@ -100,31 +100,6 @@ def create_model_relu():
     print('Model relu is created and compiled..')
     return model
 
-def create_model_prelu():
-    model = Sequential()
-
-    model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode="same", input_shape=(row, col, ch)))
-    model.add(PReLU())
-    model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode="same"))
-    model.add(PReLU())
-    model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode="same"))
-    model.add(Flatten())
-    #model.add(Dropout(.5))
-    model.add(PReLU())
-    model.add(Dense(512, init='he_normal'))
-    #model.add(Dropout(.5))
-    model.add(PReLU())
-
-    model.add(Dense(num_outputs, init='he_normal'))
-    model.add(Activation('softmax'))
-
-    sgd = RMSprop(lr=0.001)
-    model.compile(optimizer=sgd, loss=combined_crossentropy, metrics=['accuracy'])
-
-    print('Model prelu is created and compiled..')
-    return model
-
-
 def create_model_2softmax(img_size):
     keep_rate = 0.5
     pool_size = (2, 2)
@@ -146,20 +121,23 @@ def create_model_2softmax(img_size):
 
     return model
 
+#MEG
 def create_relu_2softmax(img_size):
-  keep_rate = 0.5
+  keep_rate = 0.25
   pool_size = (2, 2)
 
   img_input = Input(shape= img_size)
-  x = Convolution2D(16, 8, 8, subsample=(2,2), border_mode="same", activation='relu')(img_input)
+  x = Convolution2D(16, 3, 3, subsample=(4,4), border_mode="same", activation='relu')(img_input)
   x = MaxPooling2D(pool_size=pool_size)(x)
-  x = Convolution2D(32, 5, 5, subsample=(2,2), border_mode="same", activation='relu')(x)
+  x = Convolution2D(32, 3, 3, subsample=(2,2), border_mode="same", activation='relu')(x)
   x = MaxPooling2D(pool_size=pool_size)(x)
-  x = Convolution2D(64, 5, 5, subsample=(2,2), border_mode="same", activation='relu')(x)
+  x = Convolution2D(64, 3, 3, subsample=(2,2), border_mode="same", activation='relu')(x)
   x = MaxPooling2D(pool_size=pool_size)(x)
+
   x = Flatten()(x)
-  x = Dense(256, activation='relu')(x)
+  x = Dense(256,activation='relu')(x)
   x = Dropout(keep_rate)(x)
+
   o_st = Dense(num_outputs, activation='softmax', name='o_st')(x)
   o_thr = Dense(num_outputs, activation='softmax', name='o_thr')(x)
   model = Model(input=img_input, output=[o_st, o_thr])
@@ -204,7 +182,7 @@ if __name__ == "__main__":
   history = model.fit(X, {'o_st': y1_steering, 'o_thr': y2_throttle}, batch_size=batch_size, nb_epoch=30, verbose=1, validation_split=0.30 )
 
   print("saving model and weights")
-  with open("{}/autonomia_relu2sm_cnn.json".format(data_path), 'w') as f:
+  with open("{}/autonomia_cnn.json".format(data_path), 'w') as f:
       f.write(model.to_json())
 
-  model.save_weights("{}/autonomia_relu2sm_cnn.h5".format(data_path))
+  model.save_weights("{}/autonomia_cnn.h5".format(data_path))
