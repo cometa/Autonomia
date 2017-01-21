@@ -331,7 +331,8 @@ class RCVehicle(object):
           print "image not acquired"
           continue
         # normalize the image values
-        Y = Y / 255.
+        #Y = Y / 255.
+        Y = Y / 127.5 - 1
 
         # predict steering and throttle
         s, t = self.model.predict(Y[0:1])

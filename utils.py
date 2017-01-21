@@ -69,7 +69,8 @@ def read_uyvy(filename, rows=150, cols=320):
     Y[1::2] = f[:,2]
     Y = Y.reshape(240, 320)
     # crop the top and the bottom
-    Y = Y[80:230,0:320]
+    #Y = Y[80:230,0:320]
+    Y = Y[140:230,0:320]
 
     # reshape as a tensor for model prediction
     return Y.reshape(1, rows,cols, 1)
