@@ -32,8 +32,9 @@ import sys
 import os
 import time
 import math
-#from keras.models import Sequential
 from keras.models import model_from_json
+from config import DataConfig
+import utils
 
 # show an image in a proper scale
 def show_img(img):
@@ -48,66 +49,9 @@ def show_img(img):
   cv2.imshow('dst1_rt', img)  
   return
 
-# throttle bucket conversion map -- from [0,180] range to a bucket number in the [0.14] range
-throttle_map = [
-    [80,0], # if t <= 80 -> o=0 # Breaking:
-    [82,1], # elif t <= 82 -> o=1
-    [84,2], # elif t <= 84 -> o=2
-    [86,3], # elif t <= 86 -> o=3
-    [87,4], # elif t <= 87 -> o=4 # Breaking ^
-    
-    [96,5], # elif t <= 96 -> o=5 # Neutral
-
-    [97,6], # elif t <= 97 -> o=6 # Forward:
-    [98,7], # elif t <= 98 -> o=7
-    [99,8], # elif t <= 99 -> o=8
-    [100,9], # elif t <= 100 -> o=9
-    
-    [101,10], # elif t <= 101 -> o=10
-    [102,11], # elif t <= 102 -> o=11
-    [105,12], # elif t <= 105 -> o=12
-    [107,13], # elif t <= 107 -> o=13
-    [110,14]  # elif t <= 110 -> o=14
-]
-
-
-# convert from [-90,90] range to a bucket number in the [0,14] range with log distribution to stretch the range of the buckets around 0.
-def steering2bucket(s):
-    s -= 90
-    return int(round(math.copysign(math.log(abs(s) + 1, 2.0), s))) + 7
-
-def throttle2bucket(t):
-  for max_in_bucket,bucket in throttle_map:
-      if t <= max_in_bucket:
-          return bucket
-  return 14
-
-
-def bucket2throttle(t):
-    """ Reverse the function that buckets the throttle for neural net output """
-    map_back = {5:90}
-    t = int(float(t)+0.5)
-    for ibucket,(max_in_bucket,bucket) in enumerate(throttle_map):
-        if t == bucket:
-            if map_back.has_key(bucket):
-                return map_back[bucket]
-
-            return max_in_bucket
-    return 100 # Never happens, defensively select a mild acceleration
-
-def bucket2steering(a):
-    """ Reverse the function that buckets the steering for neural net output """
-    steer = int(a) - 7
-    original = steer
-    steer = abs(steer)
-    steer = math.pow(2.0, steer)
-    steer -= 1.0
-    steer = math.copysign(steer, original)
-    steer += 90.0
-    steer = max(0, min(179, steer))
-    return steer
-
 if __name__ == "__main__":
+  config = DataConfig()
+
   try:
     data_path = os.path.expanduser(sys.argv[1])
   except Exception, e:
@@ -131,7 +75,9 @@ if __name__ == "__main__":
   model.load_weights("{}/autonomia_cnn.h5".format(data_path))
   model.summary()
 
-  skip = 100
+  img_height, img_width, num_channels = config.img_resample_dim[0], config.img_resample_dim[1], config.num_channels
+  skip = config.skip_ahead
+
   for i,line in enumerate(labels):
     if i < skip:
       continue
@@ -142,31 +88,37 @@ if __name__ == "__main__":
     steering = int(steering)
     # throttle
     throttle = int(throttle)
-    print filename, steering, throttle, steering2bucket(steering), throttle2bucket(throttle)
+    print filename, steering, throttle, utils.steering2bucket(steering), utils.throttle2bucket(throttle)
     # load image
     img = cv2.imread(filename)
-    # convert to grayscale
-    gray_img =  cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB) 
-    # extract Y plane
-    Y_img, _, _ = cv2.split(gray_img)
 
-    #Y_img = Y_img[80:230,0:320]
-    Y_img = Y_img[140:230,0:320]
- 
-   # show image
-    show_img(Y_img)
+    # convert to YCrCb
+    gray_img =  cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)  
 
-    # Y_img is of shape (1,240,320,1)
-    Y_img = Y_img.reshape(1, 150, 320, 1) 
+    if num_channels == 1:
+      # extract and use Y plane only
+      X_img, _, _ = cv2.split(gray_img)
+    else:
+      # use YCrCb
+      X_img = gray_img
+
+    show_img(X_img)
+
+    # crop image
+    X_img = X_img[config.img_yaxis_start:config.img_yaxis_end + 1, config.img_xaxis_start:config.img_xaxis_end + 1]
+
+    # resample image 
+    X_img = cv2.resize(X_img, config.img_resample_dim, cv2.INTER_LINEAR)
+
+    # X_img is of shape (1,:,:,:)
+    X_img = X_img.reshape(1, img_height, img_width, num_channels)
 
     # normalize the image values
-    #Y_img = Y_img / 255.
-    Y_img = Y_img / 127.5 - 1
- 
+    X_img = X_img / 127.5 - 1
+
     now = time.time()
     # predict steering and throttle
-#    p = model.predict(Y_img[0:1])
-    steering, throttle = model.predict(Y_img[0:1])
+    steering, throttle = model.predict(X_img[0:1])
     t = time.time() - now
     print "execution time:", t
 #    steering = np.argmax(p[:, :15],  1)
@@ -178,8 +130,8 @@ if __name__ == "__main__":
     throttle = np.argmax(throttle[0])
 
     print steering, throttle
-    steering = bucket2steering(steering)
-    throttle = bucket2throttle(throttle)
+    steering = utils.bucket2steering(steering)
+    throttle = utils.bucket2throttle(throttle)
     print steering, throttle
 
     key = cv2.waitKey(0)

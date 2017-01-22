@@ -56,7 +56,7 @@ def buildKey(mac, secret):
     return mac + '-' + h[0:32]
 
 #def read_uyvy(filename, rows=240, cols=320):
-def read_uyvy(filename, rows=150, cols=320):
+def read_uyvy(filename, rows=90, cols=320):
     """ Read a UYVY raw image and extract the Y plane - YUV 4:2:2 - (Y0,U0,Y1,V0),(Y2,U2,Y3,V2) """
     fd = open(filename,'rb')
     f = np.fromfile(fd, dtype=np.uint8, count=240*320*2)
@@ -76,7 +76,7 @@ def read_uyvy(filename, rows=150, cols=320):
     return Y.reshape(1, rows,cols, 1)
 
 def steering2bucket(s):
-    """ Convert from [-90,90] range to a bucket number in the [0,14] range with log distribution to stretch the range of the buckets around 0 """
+    """ Convert from [0,180] range to a bucket number in the [0,14] range with log distribution to stretch the range of the buckets around 0 """
     s -= 90
     return int(round(math.copysign(math.log(abs(s) + 1, 2.0), s))) + 7
 

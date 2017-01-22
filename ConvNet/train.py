@@ -40,11 +40,6 @@ def combined_crossentropy(y_true, y_pred):
     throttle_crossentropy = K.categorical_crossentropy(y_pred_throttle, y_true_throttle)
     return (steering_crossentropy + throttle_crossentropy) / 2.
 
-
-
-
-
-
 def create_model_relu2():
     # size of pooling area for max pooling
     pool_size = (2, 2)
@@ -74,7 +69,6 @@ def create_model_relu2():
     sgd = RMSprop(lr=0.001)
     model.compile(optimizer=sgd, loss=combined_crossentropy, metrics=['accuracy'])
 
-    print('Model relu2 is created and compiled..')
     return model
 
 def create_model_relu():
@@ -103,33 +97,7 @@ def create_model_relu():
 #    sgd = Adam(lr=0.001)  #mod
     model.compile(optimizer=sgd, loss=combined_crossentropy, metrics=['accuracy'])
 
-    print('Model relu is created and compiled..')
     return model
-
-def create_model_prelu():
-    model = Sequential()
-
-    model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode="same", input_shape=(row, col, ch)))
-    model.add(PReLU())
-    model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode="same"))
-    model.add(PReLU())
-    model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode="same"))
-    model.add(Flatten())
-    #model.add(Dropout(.5))
-    model.add(PReLU())
-    model.add(Dense(512, init='he_normal'))
-    #model.add(Dropout(.5))
-    model.add(PReLU())
-
-    model.add(Dense(num_outputs, init='he_normal'))
-    model.add(Activation('softmax'))
-
-    sgd = RMSprop(lr=0.001)
-    model.compile(optimizer=sgd, loss=combined_crossentropy, metrics=['accuracy'])
-
-    print('Model prelu is created and compiled..')
-    return model
-
 
 def create_model_2softmax(img_size):
     keep_rate = 0.3
@@ -144,7 +112,6 @@ def create_model_2softmax(img_size):
     x = Dropout(keep_rate)(x)
     x = Dense(128, activation='relu')(x)
     x = Dropout(keep_rate)(x)
-
 
     o_st = Dense(num_outputs, activation='softmax', name='o_st')(x)
     o_thr = Dense(num_outputs, activation='softmax', name='o_thr')(x)
@@ -168,7 +135,6 @@ def create_modelB_2softmax(img_size):
     x = Flatten()(x)
     x = Dropout(keep_rate)(x)
 
-
     x1 = Dense(900, activation='relu', W_regularizer=l2(0.001))(x)
     x1 = Dropout(keep_rate)(x1)
     x1 = Dense(110, activation='relu', W_regularizer=l2(0.001))(x1)
@@ -185,6 +151,13 @@ def create_modelB_2softmax(img_size):
 
     return model
 
+models = {
+  'modelB_2softmax': create_modelB_2softmax,
+  'model_2softmax': create_model_2softmax,
+  'model_relu' : create_model_relu,
+  'model_relu2' : create_model_relu2,  
+}
+
 if __name__ == "__main__":
   config = TrainConfig()
 
@@ -198,45 +171,45 @@ if __name__ == "__main__":
     print("Directory %s not found." % data_path)
     sys.exit(-1)
 
-  #row, col = config.img_height, config.img_width
-  #row, col = 100, 320
-  row, col = 90, 320
-  #ch = config.num_channels
-  ch = 1
+  row, col = config.img_resample_dim
+  ch = config.num_channels
   num_epoch = config.num_epoch
   batch_size = config.batch_size
+  validation_split = config.validation_split
   num_outputs = config.num_buckets * 1
 
   # set of callbacks to save model weights during training when loss of validation set decreases
-  model_path = os.path.expanduser('model.h5')
+  #model_path = os.path.expanduser('model.h5')
   #Save the model after each epoch if the validation loss improved.
-  save_best = callbacks.ModelCheckpoint(model_path, monitor='val_loss', verbose=1, 
+  save_best = callbacks.ModelCheckpoint("{}/autonomia_cnn_step.h5".format(data_path), monitor='val_loss', verbose=1, 
                                      save_best_only=True, mode='min')
 
   #stop training if the validation loss doesn't improve for 5 consecutive epochs.
   early_stop = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=5, 
                                      verbose=0, mode='auto')
 
-
   #callbacks_list = [save_best, early_stop]
   callbacks_list = [save_best]
 
-  model = create_modelB_2softmax( (row, col, ch) )
+  model = models[config.model]((row, col, ch))
+  print("---------------------------")
+  print("model %s is created and compiled\r\n" % config.model)
   print(model.summary())
 
   print("loading images and labels")
-  X = np.load("{}/X_yuv_gray.npy".format(data_path)) / 127.5 - 1
+  X = np.load("{}/X_yuv_gray.npy".format(data_path))
   y1_steering = np.load("{}/y1_steering.npy".format(data_path))
   y2_throttle = np.load("{}/y2_throttle.npy".format(data_path))
   X, y1_steering, y2_throttle = shuffle(X, y1_steering, y2_throttle)
   # and trained it via:
-  history = model.fit(X, {'o_st': y1_steering, 'o_thr': y2_throttle}, batch_size=batch_size, nb_epoch=1, verbose=1, validation_split=0.30, callbacks=callbacks_list )
+  history = model.fit(X, {'o_st': y1_steering, 'o_thr': y2_throttle}, batch_size=batch_size, nb_epoch=num_epoch, verbose=1, validation_split=validation_split, callbacks=callbacks_list )
   
 #  start_val = round(len(X)*0.8)
 #  X_val = X[start_val:start_val + 200]
 ##  y_val = y1_steering[start_val:start_val + 200, :]
 #  pred_val = np.array( model.predict(X_val, batch_size=batch_size) )
 #  np.save('pred_validation.npy', np.hstack([y_val, pred_val[0,:,:]]))
+
   print("saving model and weights")
   with open("{}/autonomia_cnn.json".format(data_path), 'w') as f:
       f.write(model.to_json())
