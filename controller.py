@@ -28,6 +28,8 @@ import utils
 import numpy as np
 from keras.models import model_from_json
 
+from config import DataConfig
+
 class States:
   """ Vehicle states """
   IDLE=1
@@ -282,6 +284,8 @@ class RCVehicle(object):
     # Load a CNN model -- must be done in the same thread of the prediction
     self.load_model(self.config['app_params']['model'])
 
+    cnn_config = DataConfig()
+
     while True:
       now = time.time()
       #
@@ -326,13 +330,10 @@ class RCVehicle(object):
       elif self.state == States.RUNNING and self.mode == Modes.AUTO:
         # predict steering and trhottle and set the values at a rate depending on preditiction speed
         start_t = time.time()
-        Y = utils.read_uyvy(FRAMEFNAME) # Y is of shape (1, 150, 320, 1)
+        Y = utils.read_uyvy(FRAMEFNAME, cnn_config) # Y is of shape (1, :, :, 1) or (1, :, :, 3)
         if Y is None:
           print "image not acquired"
           continue
-        # normalize the image values
-        #Y = Y / 255.
-        Y = Y / 127.5 - 1
 
         # predict steering and throttle
         s, t = self.model.predict(Y[0:1])

@@ -19,6 +19,7 @@ import math
 import hashlib
 import numpy as np
 
+
 def check_rpc_msg(req):
     ret = False
     id = None
@@ -55,25 +56,41 @@ def buildKey(mac, secret):
     h = hmac.new(secret, message, digestmod=hashlib.sha256).hexdigest()
     return mac + '-' + h[0:32]
 
-#def read_uyvy(filename, rows=240, cols=320):
-def read_uyvy(filename, rows=90, cols=320):
-    """ Read a UYVY raw image and extract the Y plane - YUV 4:2:2 - (Y0,U0,Y1,V0),(Y2,U2,Y3,V2) """
+# images are aquired by ffmpeg -s 320x240 -pix_fmt  yuyv422 
+def read_uyvy(filename, config, rows=240, cols=320):
+    # input image size 
+    image_size = rows * cols * 2
+    # read a YUYV raw image and extract the Y plane - YUV 4:2:2 - (Y0,U0,Y1,V0),(Y2,U2,Y3,V2)
+    # this is equivalent to YUY2 pixel format http://www.fourcc.org/pixel-format/yuv-yuy2
     fd = open(filename,'rb')
-    f = np.fromfile(fd, dtype=np.uint8, count=240*320*2)
-    if len(f) != 320*240*2: #rows*cols*2
+    f = np.fromfile(fd, dtype=np.uint8, count=image_size)
+    if len(f) != image_size: #rows*cols*2
         # error in reading
         return None
-    f = f.reshape((240 * 320 / 2), 4)
-    Y = np.empty((240 * 320), dtype=np.float64)
+
+    # TODO: support for three channels YUV
+    f = f.reshape((rows * cols / 2), 4)
+    Y = np.empty((rows * cols), dtype=np.uint8)
     Y[0::2] = f[:,0]
     Y[1::2] = f[:,2]
-    Y = Y.reshape(240, 320)
-    # crop the top and the bottom
-    #Y = Y[80:230,0:320]
-    Y = Y[140:230,0:320]
+    Y = Y.reshape(rows, cols)
+    # TODO: Y is only the Y plane
+
+    # crop image
+    Y = Y[config.img_yaxis_start:config.img_yaxis_end + 1, config.img_xaxis_start:config.img_xaxis_end + 1]
+
+    # resample image 
+    Y = cv2.resize(Y, config.img_resample_dim, cv2.INTER_LINEAR)
+
+    # Y is of shape (1,:,:,:)
+    Y = Y.reshape(1, img_height, img_width, num_channels)
+
+    # cast to float and normalize the image values
+    Y_f = np.empty((rows * cols), dtype=np.float64)
+    Y_f = Y / 127.5 - 1
 
     # reshape as a tensor for model prediction
-    return Y.reshape(1, rows,cols, 1)
+    return Y
 
 def steering2bucket(s):
     """ Convert from [0,180] range to a bucket number in the [0,14] range with log distribution to stretch the range of the buckets around 0 """
