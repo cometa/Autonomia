@@ -1,5 +1,6 @@
 class DataConfig(object):
-    img_height = 150
+#    img_height = 150
+    img_height = 90
     img_width = 320
     num_channels = 1
     num_buckets = 15

@@ -150,7 +150,8 @@ if __name__ == "__main__":
     # extract Y plane
     Y_img, _, _ = cv2.split(gray_img)
 
-    Y_img = Y_img[80:230,0:320]
+    #Y_img = Y_img[80:230,0:320]
+    Y_img = Y_img[140:230,0:320]
  
    # show image
     show_img(Y_img)
@@ -159,7 +160,8 @@ if __name__ == "__main__":
     Y_img = Y_img.reshape(1, 150, 320, 1) 
 
     # normalize the image values
-    Y_img = Y_img / 255.
+    #Y_img = Y_img / 255.
+    Y_img = Y_img / 127.5 - 1
  
     now = time.time()
     # predict steering and throttle

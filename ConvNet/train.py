@@ -26,8 +26,9 @@ from keras.layers import Input, Convolution2D, MaxPooling2D, AveragePooling2D, F
 from keras.models import Sequential, Model
 from config import TrainConfig
 from keras import backend as K
-
 from sklearn.utils import shuffle
+from keras import callbacks
+from keras.regularizers import l2
 
 def combined_crossentropy(y_true, y_pred):
     y_true_steering = y_true[:, :num_outputs]
@@ -38,6 +39,11 @@ def combined_crossentropy(y_true, y_pred):
     steering_crossentropy = K.categorical_crossentropy(y_pred_steering, y_true_steering)
     throttle_crossentropy = K.categorical_crossentropy(y_pred_throttle, y_true_throttle)
     return (steering_crossentropy + throttle_crossentropy) / 2.
+
+
+
+
+
 
 def create_model_relu2():
     # size of pooling area for max pooling
@@ -100,20 +106,46 @@ def create_model_relu():
     print('Model relu is created and compiled..')
     return model
 
+def create_model_prelu():
+    model = Sequential()
+
+    model.add(Convolution2D(16, 8, 8, subsample=(4, 4), border_mode="same", input_shape=(row, col, ch)))
+    model.add(PReLU())
+    model.add(Convolution2D(32, 5, 5, subsample=(2, 2), border_mode="same"))
+    model.add(PReLU())
+    model.add(Convolution2D(64, 5, 5, subsample=(2, 2), border_mode="same"))
+    model.add(Flatten())
+    #model.add(Dropout(.5))
+    model.add(PReLU())
+    model.add(Dense(512, init='he_normal'))
+    #model.add(Dropout(.5))
+    model.add(PReLU())
+
+    model.add(Dense(num_outputs, init='he_normal'))
+    model.add(Activation('softmax'))
+
+    sgd = RMSprop(lr=0.001)
+    model.compile(optimizer=sgd, loss=combined_crossentropy, metrics=['accuracy'])
+
+    print('Model prelu is created and compiled..')
+    return model
+
+
 def create_model_2softmax(img_size):
-    keep_rate = 0.5
+    keep_rate = 0.3
     pool_size = (2, 2)
-    print('Number of outputs:', num_outputs)
-    img_input = Input(shape= img_size)
+    img_input = Input(shape = img_size)
     x = Convolution2D(16, 5, 5, subsample=(2, 2), border_mode="same", activation='relu')(img_input)
     x = MaxPooling2D(pool_size=pool_size)(x)
-    #x = Dropout(0.5)(x)
+    x = Dropout(keep_rate)(x)
     x = Convolution2D(32, 2, 2, subsample=(1, 1), border_mode="same", activation='relu')(x)
     x = MaxPooling2D(pool_size=pool_size)(x)
     x = Flatten()(x)
+    x = Dropout(keep_rate)(x)
     x = Dense(128, activation='relu')(x)
     x = Dropout(keep_rate)(x)
-    #x = Dropout(0.33)(x)
+
+
     o_st = Dense(num_outputs, activation='softmax', name='o_st')(x)
     o_thr = Dense(num_outputs, activation='softmax', name='o_thr')(x)
     model = Model(input=img_input, output=[o_st, o_thr])
@@ -121,31 +153,37 @@ def create_model_2softmax(img_size):
 
     return model
 
-#MEG
-def create_relu_2softmax(img_size):
-  keep_rate = 0.25
-  pool_size = (2, 2)
+def create_modelB_2softmax(img_size):
+    keep_rate = 0.5
+    pool_size = (2, 2)
+    img_input = Input(shape = img_size)
+    x = Convolution2D(16, 5, 5, subsample=(1, 1), border_mode="same", activation='relu')(img_input)
+    x = MaxPooling2D(pool_size=pool_size)(x)
+    x = Dropout(keep_rate)(x)
+    x = Convolution2D(32, 5, 5, subsample=(1, 1), border_mode="same", activation='relu')(x)
+    x = MaxPooling2D(pool_size=pool_size)(x)
+    x = Dropout(keep_rate)(x)
+    x = Convolution2D(64, 4, 4, subsample=(1, 1), border_mode="valid", activation='relu')(x)
+    x = MaxPooling2D(pool_size=pool_size)(x)
+    x = Flatten()(x)
+    x = Dropout(keep_rate)(x)
 
-  img_input = Input(shape= img_size)
-  x = Convolution2D(16, 3, 3, subsample=(4,4), border_mode="same", activation='relu')(img_input)
-  x = MaxPooling2D(pool_size=pool_size)(x)
-  x = Convolution2D(32, 3, 3, subsample=(2,2), border_mode="same", activation='relu')(x)
-  x = MaxPooling2D(pool_size=pool_size)(x)
-  x = Convolution2D(64, 3, 3, subsample=(2,2), border_mode="same", activation='relu')(x)
-  x = MaxPooling2D(pool_size=pool_size)(x)
 
-  x = Flatten()(x)
-  x = Dense(256,activation='relu')(x)
-  x = Dropout(keep_rate)(x)
+    x1 = Dense(900, activation='relu', W_regularizer=l2(0.001))(x)
+    x1 = Dropout(keep_rate)(x1)
+    x1 = Dense(110, activation='relu', W_regularizer=l2(0.001))(x1)
+    x1 = Dropout(keep_rate)(x1)
+    o_st = Dense(num_outputs, activation='softmax', name='o_st')(x1)
 
-  o_st = Dense(num_outputs, activation='softmax', name='o_st')(x)
-  o_thr = Dense(num_outputs, activation='softmax', name='o_thr')(x)
-  model = Model(input=img_input, output=[o_st, o_thr])
-  sgd = RMSprop(lr=0.001)
-  model.compile(optimizer=sgd, loss={'o_st': 'categorical_crossentropy', 'o_thr': 'categorical_crossentropy'}, metrics=['accuracy'])
+    x2 = Dense(800, activation='relu', W_regularizer=l2(0.001))(x)
+    x2 = Dropout(keep_rate)(x2)
+    x2 = Dense(128, activation='relu', W_regularizer=l2(0.001))(x2)
+    x2 = Dropout(keep_rate)(x2)
+    o_thr = Dense(num_outputs, activation='softmax', name='o_thr')(x2)
+    model = Model(input=img_input, output=[o_st, o_thr])
+    model.compile(optimizer='adam', loss={'o_st': 'categorical_crossentropy', 'o_thr': 'categorical_crossentropy'}, metrics=['accuracy'])
 
-  print('Model relu2softmax is created and compiled..')
-  return model
+    return model
 
 if __name__ == "__main__":
   config = TrainConfig()
@@ -160,27 +198,45 @@ if __name__ == "__main__":
     print("Directory %s not found." % data_path)
     sys.exit(-1)
 
-  row, col = config.img_height, config.img_width
-  ch = config.num_channels
+  #row, col = config.img_height, config.img_width
+  #row, col = 100, 320
+  row, col = 90, 320
+  #ch = config.num_channels
+  ch = 1
   num_epoch = config.num_epoch
   batch_size = config.batch_size
   num_outputs = config.num_buckets * 1
 
-#  model = create_model_2softmax( (row, col, ch) )
-  model = create_relu_2softmax( (row, col, ch) )
+  # set of callbacks to save model weights during training when loss of validation set decreases
+  model_path = os.path.expanduser('model.h5')
+  #Save the model after each epoch if the validation loss improved.
+  save_best = callbacks.ModelCheckpoint(model_path, monitor='val_loss', verbose=1, 
+                                     save_best_only=True, mode='min')
 
-  #This will plot a graph of the model and save it to a file:
-  #plot(model, to_file='create_model_2softmax.png')
+  #stop training if the validation loss doesn't improve for 5 consecutive epochs.
+  early_stop = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=5, 
+                                     verbose=0, mode='auto')
+
+
+  #callbacks_list = [save_best, early_stop]
+  callbacks_list = [save_best]
+
+  model = create_modelB_2softmax( (row, col, ch) )
   print(model.summary())
 
   print("loading images and labels")
-  X = np.load("{}/X_yuv_gray.npy".format(data_path))-0.5
+  X = np.load("{}/X_yuv_gray.npy".format(data_path)) / 127.5 - 1
   y1_steering = np.load("{}/y1_steering.npy".format(data_path))
   y2_throttle = np.load("{}/y2_throttle.npy".format(data_path))
   X, y1_steering, y2_throttle = shuffle(X, y1_steering, y2_throttle)
   # and trained it via:
-  history = model.fit(X, {'o_st': y1_steering, 'o_thr': y2_throttle}, batch_size=batch_size, nb_epoch=30, verbose=1, validation_split=0.30 )
-
+  history = model.fit(X, {'o_st': y1_steering, 'o_thr': y2_throttle}, batch_size=batch_size, nb_epoch=1, verbose=1, validation_split=0.30, callbacks=callbacks_list )
+  
+#  start_val = round(len(X)*0.8)
+#  X_val = X[start_val:start_val + 200]
+##  y_val = y1_steering[start_val:start_val + 200, :]
+#  pred_val = np.array( model.predict(X_val, batch_size=batch_size) )
+#  np.save('pred_validation.npy', np.hstack([y_val, pred_val[0,:,:]]))
   print("saving model and weights")
   with open("{}/autonomia_cnn.json".format(data_path), 'w') as f:
       f.write(model.to_json())

@@ -151,7 +151,8 @@ if __name__ == "__main__":
     # Y_img is of shape (240,320,1)
     Y_img = Y_img.reshape(1, img_height, img_width, num_channels)
     # normalize the image values
-    X[index] = Y_img / 255.
+    #X[index] = Y_img / 255.
+    X[index] = Y_img 
 
     # steering bucket
     y1[index, steering2bucket(steering)] = 1.
