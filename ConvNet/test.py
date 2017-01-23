@@ -44,7 +44,7 @@ def read_uyvy(filename, config, rows=240, cols=320):
     Y = Y[config.img_yaxis_start:config.img_yaxis_end + 1, config.img_xaxis_start:config.img_xaxis_end + 1]
 
     # resample image 
-    Y = cv2.resize(Y, config.img_resample_dim, cv2.INTER_LINEAR)
+    Y = cv2.resize(Y, config.img_resample_dim) #, cv2.INTER_LINEAR)
 
     # convert to float
     X = np.empty((rows * cols), dtype=np.float64)
