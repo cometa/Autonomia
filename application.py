@@ -82,7 +82,7 @@ def main(argv):
   connected = False
 
   while not connected:
-    ret = com.attach(device_id, "Autonomia")
+    ret = com.attach(device_id, "UGV")
     if com.error != 0:
         print "Error in attaching to Cometa. Retrying ...", com.perror()
         time.sleep(1)
