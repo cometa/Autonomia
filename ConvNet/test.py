@@ -56,7 +56,7 @@ if __name__ == "__main__":
     cnn_config = DataConfig()
 
     while True:
-      Y, X = read_uyvy('/home/oem/frame.yuv', cnn_config)
+      Y, X = read_uyvy('/tmpfs/frame.yuv', cnn_config)
       if Y is None:
         continue
       print "\r\n"
