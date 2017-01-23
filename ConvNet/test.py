@@ -8,7 +8,7 @@ from config import DataConfig
 
 # show an image in a proper scale
 def show_img(img):
-  screen_res = 320. * 2 , 240. * 2
+  screen_res = 320. * 1 , 240. * 1
   scale_width = screen_res[0] / img.shape[1]
   scale_height = screen_res[1] / img.shape[0]
   scale = min(scale_width, scale_height)
@@ -30,7 +30,7 @@ def read_uyvy(filename, config, rows=240, cols=320):
     print "read %d bytes from %s" % (len(f), filename)
     if len(f) != image_size: #rows*cols*2
         print "error in reading"
-        return None
+        return None, None
 
     # TODO: support for three channels YUV
     f = f.reshape((rows * cols / 2), 4)
