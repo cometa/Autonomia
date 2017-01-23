@@ -35,6 +35,9 @@ import math
 from keras.models import model_from_json
 from config import DataConfig
 import utils
+import ntpath
+
+interactive =  False
 
 # show an image in a proper scale
 def show_img(img):
@@ -68,7 +71,10 @@ if __name__ == "__main__":
   nlabels = len(labels)
   print "found %d labels" % nlabels
 
+  out_file = open("{}/labels_pred.csv".format(data_path), 'w')
+
   # Load model structure
+
   model = model_from_json(open("{}/autonomia_cnn.json".format(data_path)).read())
 
   # Load model weights
@@ -102,7 +108,7 @@ if __name__ == "__main__":
       # use YCrCb
       X_img = gray_img
 
-    show_img(X_img)
+    if interactive: show_img(X_img)
 
     # crop image
     X_img = X_img[config.img_yaxis_start:config.img_yaxis_end + 1, config.img_xaxis_start:config.img_xaxis_end + 1]
@@ -134,7 +140,9 @@ if __name__ == "__main__":
     throttle = utils.bucket2throttle(throttle)
     print steering, throttle
 
-    key = cv2.waitKey(0)
+    out_file.write("%s,%d,%d\n" % (ntpath.basename(filename), steering, throttle))
 
-    if key == 27:
-        sys.exit(0)
+    if interactive: 
+      key = cv2.waitKey(0)
+      if key == 27:
+          sys.exit(0)
