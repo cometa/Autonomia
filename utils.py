@@ -18,7 +18,7 @@ limitations under the License.
 import math
 import hashlib
 import numpy as np
-
+import cv2
 
 def check_rpc_msg(req):
     ret = False
@@ -80,10 +80,10 @@ def read_uyvy(filename, config, rows=240, cols=320):
     Y = Y[config.img_yaxis_start:config.img_yaxis_end + 1, config.img_xaxis_start:config.img_xaxis_end + 1]
 
     # resample image 
-    Y = cv2.resize(Y, config.img_resample_dim, cv2.INTER_LINEAR)
+    Y = cv2.resize(Y, config.img_resample_dim) #, cv2.INTER_LINEAR)
 
     # Y is of shape (1,:,:,:)
-    Y = Y.reshape(1, img_height, img_width, num_channels)
+    Y = Y.reshape(1, config.img_resample_dim[0], config.img_resample_dim[1], config.num_channels)
 
     # cast to float and normalize the image values
     Y_f = np.empty((rows * cols), dtype=np.float64)
