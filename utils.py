@@ -90,7 +90,7 @@ def read_uyvy(filename, config, rows=240, cols=320):
     Y_f = Y / 127.5 - 1
 
     # reshape as a tensor for model prediction
-    return Y
+    return Y_f
 
 def steering2bucket(s):
     """ Convert from [0,180] range to a bucket number in the [0,14] range with log distribution to stretch the range of the buckets around 0 """
