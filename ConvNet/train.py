@@ -103,11 +103,12 @@ def create_model_2softmax(img_size):
     keep_rate = 0.3
     pool_size = (2, 2)
     img_input = Input(shape = img_size)
-    x = Convolution2D(16, 5, 5, subsample=(2, 2), border_mode="same", activation='relu')(img_input)
+    x = Convolution2D(16, 5, 5, subsample=(2, 2), W_regularizer=l2(0.001), border_mode="same", activation='relu')(img_input)
     x = MaxPooling2D(pool_size=pool_size)(x)
     x = Dropout(keep_rate)(x)
-    x = Convolution2D(32, 2, 2, subsample=(1, 1), border_mode="same", activation='relu')(x)
+    x = Convolution2D(32, 2, 2, subsample=(1, 1), W_regularizer=l2(0.001), border_mode="valid", activation='relu')(x)
     x = MaxPooling2D(pool_size=pool_size)(x)
+
     x = Flatten()(x)
     x = Dropout(keep_rate)(x)
     x = Dense(128, activation='relu')(x)
@@ -189,7 +190,7 @@ if __name__ == "__main__":
                                      verbose=0, mode='auto')
 
   #callbacks_list = [save_best, early_stop]
-  callbacks_list = [save_best]
+  callbacks_list = []
 
   model = models[config.model]((row, col, ch))
   print("---------------------------")
