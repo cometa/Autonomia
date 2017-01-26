@@ -7,7 +7,7 @@ The car controller software relies on a convolutional neural network, trained en
 
 **Video from the first test run:**
 
-[![First Test Run](https://img.youtube.com/vi/f2dknc7g4Zc/0.jpg)](https://www.youtube.com/watch?v=f2dknc7g4Zc)
+[![First Test Run](https://img.youtube.com/vi/642uDiZwA44/0.jpg)](https://youtu.be/642uDiZwA44)
 ## Running Modes
 The Autonomia vehicle has three running modes:
 
