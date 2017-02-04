@@ -130,7 +130,7 @@ def main(argv):
     # Send telemetry data
     if car.telemetry_period < now - last_telemetry: 
       msg = car.telemetry()
-      if com.send_data(str(msg)) < 0:
+      if com.send_data(json.dumps(msg)) < 0:
           syslog("Error in sending telemetry data.")
       else:
           if car.verbose:
