@@ -82,7 +82,7 @@ def main(argv):
   connected = False
 
   while not connected:
-    ret = com.attach(device_id, "UGV")
+    ret = com.attach(device_id, "ROV")
     if com.error != 0:
         print "Error in attaching to Cometa. Retrying ...", com.perror()
         time.sleep(1)
@@ -113,7 +113,8 @@ def main(argv):
   # Export the vechicle object to the API module
   api.car = car
 
-  last_second, last_telemetry = 0, 0
+  gps = None
+  last_second, last_telemetry = 0., 0.
   while car.state:
     now = time.time()
 
@@ -137,7 +138,7 @@ def main(argv):
               syslog("Sending telemetry data %s " % msg)
       last_telemetry = now
 
-    time.sleep(1)
+    time.sleep(0.1)
 
 if __name__ == '__main__':
   main(sys.argv[1:])
