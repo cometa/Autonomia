@@ -109,6 +109,7 @@ def main(argv):
 
   # Start the vehicle with default training mode 
   car.start()
+  car.com = com
 
   # Export the vechicle object to the API module
   api.car = car
@@ -129,14 +130,14 @@ def main(argv):
       last_second = now
 
     # Send telemetry data
-    if car.telemetry_period < now - last_telemetry: 
-      msg = car.telemetry()
-      if com.send_data(json.dumps(msg)) < 0:
-          syslog("Error in sending telemetry data.")
-      else:
-          if car.verbose:
-              syslog("Sending telemetry data %s " % msg)
-      last_telemetry = now
+#    if car.telemetry_period < now - last_telemetry: 
+#      msg = car.telemetry()
+#      if com.send_data(json.dumps(msg)) < 0:
+#          syslog("Error in sending telemetry data.")
+#      else:
+#          if car.verbose:
+#              syslog("Sending telemetry data %s " % msg)
+#      last_telemetry = now
 
     time.sleep(1)
 

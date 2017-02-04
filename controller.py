@@ -126,6 +126,8 @@ class RCVehicle(object):
     self.loop_t.daemon = True   # force to exit on SIGINT
 
     self.telemetry_period=config['app_params']['telemetry_period']
+    # cometa handle
+    self.com = None
     return
 
   def load_model(self, modelpath):
@@ -286,8 +288,20 @@ class RCVehicle(object):
 
     cnn_config = DataConfig()
 
+    last_telemetry = 0.
     while True:
       now = time.time()
+
+      # Send telemetry data
+      if self.telemetry_period < now - last_telemetry: 
+        msg = self.telemetry()
+        if self.com.send_data(json.dumps(msg)) < 0:
+            syslog("Error in sending telemetry data.")
+        else:
+            if self.verbose:
+                syslog("Sending telemetry data %s " % msg)
+        last_telemetry = now
+
       #
       # ------------------------------------------------------------
       #
@@ -370,4 +384,4 @@ class RCVehicle(object):
       # ------------------------------------------------------------
       #
       else:
-        time.sleep(1)
+        time.sleep(0.1)
