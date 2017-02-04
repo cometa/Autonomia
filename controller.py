@@ -219,7 +219,7 @@ class RCVehicle(object):
     ret = {}
     ret['type'] = 1
     ret['time'] = str(int(time.time() * 1000))
-    ret['device'] = self.serial
+    ret['device_id'] = self.serial
     ret['state'] = self.state
     ret['mode'] = self.mode
     ret['steering'] = self.steering
