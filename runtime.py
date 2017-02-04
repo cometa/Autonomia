@@ -24,10 +24,17 @@ import threading
 import json
 import subprocess
 import os
-from uuid import getnode as get_mac
+#from uuid import getnode as get_mac
 
 # Default values
 DCT_FILENAME = 'config.json'
+
+import socket, fcntl, struct
+def get_mac():
+    ifname = 'eth0'
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    info = fcntl.ioctl(s.fileno(), 0x8927, struct.pack('256s', ifname[:15]))
+    return ''.join(['%02X' % ord(char) for char in info[18:24]])
 
 # This module uses the following enviromental variables:
 #	COMETA_APIKEY
