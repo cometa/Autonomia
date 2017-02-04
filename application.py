@@ -138,7 +138,7 @@ def main(argv):
               syslog("Sending telemetry data %s " % msg)
       last_telemetry = now
 
-    time.sleep(0.1)
+    time.sleep(1)
 
 if __name__ == '__main__':
   main(sys.argv[1:])
