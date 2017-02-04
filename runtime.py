@@ -177,10 +177,12 @@ class Runtime(object):
 
         mac = ''
         m = get_mac()
-        for i in range(0, 12, 2):
-        #for i in range(6, 12, 2):
-            mac += ("%012X" % m)[i:i+2]
-        return mac
+        return m
+        # used with uuid        
+#        for i in range(0, 12, 2):
+#        #for i in range(6, 12, 2):
+#            mac += ("%012X" % m)[i:i+2]
+#        return mac
 
     # Get MAC address of current network interface
     @classmethod
