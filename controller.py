@@ -302,17 +302,24 @@ class RCVehicle(object):
                 syslog("Sending telemetry data %s " % msg)
         last_telemetry = now
 
+      # get inputs from RC receiver in the [0,180] range
+      try:
+        if self.arport.inWaiting():
+          steering_in, throttle_in = self.input_arduino()
+      except Exception, e:
+        self.log("input_arduino: %s" % str(e))
+        continue
       #
       # ------------------------------------------------------------
       #
       if self.state == States.RUNNING and self.mode == Modes.TRAINING:
         # get inputs from RC receiver in the [0,180] range
-        try:
-          if self.arport.inWaiting():
-            steering_in, throttle_in = self.input_arduino()
-        except Exception, e:
-          self.log("input_arduino: %s" % str(e))
-          continue
+#        try:
+#          if self.arport.inWaiting():
+#            steering_in, throttle_in = self.input_arduino()
+#        except Exception, e:
+#          self.log("input_arduino: %s" % str(e))
+#          continue
         # set steering to neutral if within an interval around 90
         steering_in = 90 if 87 <= steering_in < 92 else steering_in
         if self.verbose: print steering_in, throttle_in 
@@ -374,7 +381,8 @@ class RCVehicle(object):
       #
       elif self.state == States.RUNNING and self.mode == Modes.REMOTE:
         self.output_arduino(self.steering, self.throttle)
-        time.sleep(0.2)
+#        time.sleep(0.2)
+        time.sleep(0.02)
       #
       # ------------------------------------------------------------
       #
