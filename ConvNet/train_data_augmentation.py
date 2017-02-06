@@ -90,7 +90,7 @@ def gamma_transform(img, label):
 
 
 def pixel_scaling(img, label):
-    return ((img/255. - 0.5), label)
+    return ((img/127.5. - 1), label)
 
 
 def image_transform(img_adress, label, target_sz ):  
