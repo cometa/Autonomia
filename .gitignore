@@ -90,3 +90,10 @@ ENV/
 
 Arduino/libraries/
 
+#images datafile (JM machine)
+ConvNet/dataWhiteTrack/*.flv
+ConvNet/dataWhiteTrack/vid01/*.*
+
+
+
+
