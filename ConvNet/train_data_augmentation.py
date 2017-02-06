@@ -29,11 +29,13 @@ from config import TrainConfig
 from keras import backend as K
 from sklearn.utils import shuffle
 from keras import callbacks
+from keras.callbacks import ModelCheckpoint
 from keras.regularizers import l2
 import cv2
 # utils.py is a link to ../utils.py
 import utils
 from sklearn.model_selection import train_test_split
+
 SEED = 42
 
 # scale image size
@@ -362,13 +364,15 @@ if __name__ == "__main__":
   #Save the model after each epoch if the validation loss improved.
   save_best = callbacks.ModelCheckpoint("{}/autonomia_cnn_step.h5".format(data_path), monitor='val_loss', verbose=1, 
                                      save_best_only=True, mode='min')
-
   #stop training if the validation loss doesn't improve for 5 consecutive epochs.
   early_stop = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=5, 
                                      verbose=0, mode='auto')
+  ## checkpoint: save weights everytime val_acc improves
+  weight_fname=data_path+"/weights-improvement-{epoch:02d}-{val_o_st_acc:.2f}.h5"
+  checkpoint = ModelCheckpoint(weight_fname, monitor='val_o_st_acc', verbose=1, save_best_only=True, mode='max')
 
   #callbacks_list = [save_best, early_stop]
-  callbacks_list = []
+  callbacks_list = [checkpoint]
 
   model = models[config.model]((*train_img_sz, train_img_ch))
   print("---------------------------")
