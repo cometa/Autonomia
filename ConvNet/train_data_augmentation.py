@@ -90,7 +90,7 @@ def gamma_transform(img, label):
 
 
 def pixel_scaling(img, label):
-    return ((img/127.5. - 1), label)
+    return ((img/127.5 - 1), label)
 
 
 def image_transform(img_adress, label, target_sz ):  
@@ -389,3 +389,8 @@ if __name__ == "__main__":
       f.write(model.to_json())
 
   model.save_weights("{}/autonomia_cnn.h5".format(data_path))
+
+  #clear session to avoid error at the end of program: "AttributeError: 'NoneType' object has no attribute 'TF_DeleteStatus'"
+    # The alternative does not work: import gc; gc.collect()
+    # https://github.com/tensorflow/tensorflow/issues/3388
+  K.clear_session()
