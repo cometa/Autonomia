@@ -132,15 +132,17 @@ class RCVehicle(object):
 
   def load_model(self, modelpath):
     """ Load a CNN model """
+    if self.state == States.AUTO:
+      return False
     try:
       self.model = model_from_json(open(modelpath + ".json").read())
       self.model.load_weights(modelpath + ".h5")
     except Exception, e:
       self.log("Failed to load CNN model %s. (%s)" % (modelpath,str(e)) )
-      return
+      return False
 
     self.log("Loaded CNN model %s." % modelpath)
-    return
+    return True
 
   def state2run(self):
     """ State transition to RUNNING """
@@ -382,7 +384,7 @@ class RCVehicle(object):
       elif self.state == States.RUNNING and self.mode == Modes.REMOTE:
         self.output_arduino(self.steering, self.throttle)
 #        time.sleep(0.2)
-        time.sleep(0.1)
+        time.sleep(0.01)
       #
       # ------------------------------------------------------------
       #
