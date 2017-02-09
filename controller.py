@@ -132,7 +132,7 @@ class RCVehicle(object):
 
   def load_model(self, modelpath):
     """ Load a CNN model """
-    if self.state == States.AUTO:
+    if self.mode == Modes.AUTO:
       return False
     try:
       self.model = model_from_json(open(modelpath + ".json").read())
