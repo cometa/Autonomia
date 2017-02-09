@@ -30,6 +30,7 @@ from sklearn.utils import shuffle
 from keras import callbacks
 from keras.regularizers import l2
 
+
 def combined_crossentropy(y_true, y_pred):
     y_true_steering = y_true[:, :num_outputs]
     y_true_throttle = y_true[:, num_outputs:]
