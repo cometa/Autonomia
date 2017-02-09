@@ -296,10 +296,10 @@ class RCVehicle(object):
       if self.telemetry_period < now - last_telemetry: 
         msg = self.telemetry()
         if self.com.send_data(json.dumps(msg)) < 0:
-            syslog("Error in sending telemetry data.")
+            self.log("Error in sending telemetry data.")
         else:
             if self.verbose:
-                syslog("Sending telemetry data %s " % msg)
+                self.log("Sending telemetry data %s " % msg)
         last_telemetry = now
 
       # get inputs from RC receiver in the [0,180] range
