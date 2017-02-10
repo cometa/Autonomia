@@ -384,7 +384,7 @@ class RCVehicle(object):
       elif self.state == States.RUNNING and self.mode == Modes.REMOTE:
         self.output_arduino(self.steering, self.throttle)
 #        time.sleep(0.2)
-        time.sleep(0.01)
+        time.sleep(0.05)
       #
       # ------------------------------------------------------------
       #
