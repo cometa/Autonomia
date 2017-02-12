@@ -1,9 +1,9 @@
 ![alt tag](https://img.shields.io/badge/python-2.7-blue.svg)
 
 # Autonomia
-A project for a cloud connected, autonomous RC 1/10 scale electric car to participate in the [DIY Robocars self-racing-cars events.](https://www.meetup.com/Self-Racing-Cars/) The project makes extensive use of [Vederly](http://www.cometa.io), a video and device management cloud platform for mobility applications developed by `Visible Energy Inc.`
+A project for a cloud connected, autonomous RC 1/10 scale electric car to participate in the [DIY Robocars self-racing-cars events.](https://www.meetup.com/Self-Racing-Cars/) The project relies on [Cometa](http://www.cometa.io), and of the forthcoming video and device management cloud platform and API for mobility applications developed by `Visible Energy Inc.`
 
-The car controller software relies on a convolutional neural network, trained end-to-end using video from the camera and telemetry from the controller, to drive itself predicting steering and throttle values from a live image.
+The car autopilot car software is based on a convolutional neural network, trained end-to-end using video from the camera and telemetry,and it works by predicting steering and throttle values from a live image about 20 times per second.
 
 **Video from the first test run:**
 
