@@ -110,6 +110,8 @@ class RCVehicle(object):
 
     # CNN predicting model
     self.cnn_model = None
+    self.p_steering=THETA_CENTER
+    self._throttle=MOTOR_NEUTRAL
 
     self.arport=setup_arduino(config, self.log) 
     while self.arport == None:
@@ -228,6 +230,8 @@ class RCVehicle(object):
     ret['mode'] = self.mode
     ret['steering'] = self.steering
     ret['throttle'] = self.throttle
+    ret['p_steering'] = self.p_steering
+    ret['p_throttle'] = self.p_throttle    
     ret['GPS'] = {}
     try:
       ret['GPS']['lat'] = int(self.readings['lat'] * 10E4) / 10E4
@@ -383,8 +387,23 @@ class RCVehicle(object):
       #
       elif self.state == States.RUNNING and self.mode == Modes.REMOTE:
         self.output_arduino(self.steering, self.throttle)
-#        time.sleep(0.2)
-        time.sleep(0.05)
+
+        start_t = time.time()
+        Y = utils.read_uyvy(FRAMEFNAME, cnn_config) # Y is of shape (1, :, :, 1) or (1, :, :, 3)
+        if Y is None:
+          print "image not acquired"
+          continue
+
+        # predict steering and throttle
+        s, t = self.model.predict(Y[0:1])
+        self.p_steering = utils.bucket2steering(np.argmax(s[0]))
+        self.p_throttle = utils.bucket2throttle(np.argmax(t[0]))
+
+        dt = time.time() - start_t
+        print self.p_steering, self.p_throttle, dt
+
+        time.sleep(0.01)
+#        time.sleep(0.05)
       #
       # ------------------------------------------------------------
       #
