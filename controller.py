@@ -111,7 +111,7 @@ class RCVehicle(object):
     # CNN predicting model
     self.cnn_model = None
     self.p_steering=THETA_CENTER
-    self._throttle=MOTOR_NEUTRAL
+    self.p_throttle=MOTOR_NEUTRAL
 
     self.arport=setup_arduino(config, self.log) 
     while self.arport == None:
