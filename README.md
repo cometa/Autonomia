@@ -12,10 +12,10 @@ The car autopilot car software is based on a convolutional neural network, train
 The Autonomia vehicle has three running modes:
 
 1. Controlled by the radio remote control (RC)
-2. Controlled remotely through the Remote JSON/RPC API and the Vederly cloud servers
+2. Controlled remotely through the Remote JSON/RPC API and the Autonomia cloud servers
 3. Autonomously, driven by the predictions of a convolutional neural network trained end-to-end
 
-In any running mode, the vehicle is connected to the Vederly cloud servers using the [Cometa API](http://www.cometa.io/cometa-api.html). It is also remotely managed and responding to the commands in the JSON/RPC Remote API, as well streaming telemetry and live video from the on-board camera to the Vederly cloud managemengt platform.
+In any running mode, the vehicle is connected to the Autonomia cloud servers using the [Cometa API](http://www.cometa.io/cometa-api.html). It is also remotely managed and responding to the commands in the JSON/RPC Remote API, as well streaming telemetry and live video from the on-board camera to the Vederly cloud managemengt platform.
 
 ## Hardware
 The hardware added to a commercial 1/10 scale RC car, such as the [Traxxas Stampede](https://traxxas.com/products/models/electric/36054-1stampede?t=details) used in the first model, consists of:
