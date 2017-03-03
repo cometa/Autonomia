@@ -217,6 +217,16 @@ def _video_start(params):
   streamer.video_start(telem)
   return {"success": True}  
 
+def _load_model(params):
+  if type(params) is not dict or 'path' not in params.keys():
+    return {"success": False}
+  ret = car.load_model(params['path'])
+  if ret:
+    return {"success": True}
+  else:
+    return {"success": False}
+
+
 global rpc_methods
 rpc_methods = ({'name':'rexec','function':_rexec}, 
                {'name':'video_devices','function':_video_devices}, 
@@ -230,4 +240,5 @@ rpc_methods = ({'name':'rexec','function':_rexec},
                {'name':'start','function':_start}, 
                {'name':'video_start','function':_video_start}, 
                {'name':'video_stop','function':_video_stop}, 
+               {'name':'load_model','function':_load_model}, 
 )

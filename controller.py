@@ -110,6 +110,8 @@ class RCVehicle(object):
 
     # CNN predicting model
     self.cnn_model = None
+    self.p_steering=THETA_CENTER
+    self.p_throttle=MOTOR_NEUTRAL
 
     self.arport=setup_arduino(config, self.log) 
     while self.arport == None:
@@ -132,15 +134,17 @@ class RCVehicle(object):
 
   def load_model(self, modelpath):
     """ Load a CNN model """
+    if self.mode == Modes.AUTO:
+      return False
     try:
       self.model = model_from_json(open(modelpath + ".json").read())
       self.model.load_weights(modelpath + ".h5")
     except Exception, e:
       self.log("Failed to load CNN model %s. (%s)" % (modelpath,str(e)) )
-      return
+      return False
 
     self.log("Loaded CNN model %s." % modelpath)
-    return
+    return True
 
   def state2run(self):
     """ State transition to RUNNING """
@@ -226,6 +230,8 @@ class RCVehicle(object):
     ret['mode'] = self.mode
     ret['steering'] = self.steering
     ret['throttle'] = self.throttle
+    ret['p_steering'] = self.p_steering
+    ret['p_throttle'] = self.p_throttle    
     ret['GPS'] = {}
     try:
       ret['GPS']['lat'] = int(self.readings['lat'] * 10E4) / 10E4
@@ -296,10 +302,10 @@ class RCVehicle(object):
       if self.telemetry_period < now - last_telemetry: 
         msg = self.telemetry()
         if self.com.send_data(json.dumps(msg)) < 0:
-            syslog("Error in sending telemetry data.")
+            self.log("Error in sending telemetry data.")
         else:
             if self.verbose:
-                syslog("Sending telemetry data %s " % msg)
+                self.log("Sending telemetry data %s " % msg)
         last_telemetry = now
 
       # get inputs from RC receiver in the [0,180] range
@@ -381,8 +387,23 @@ class RCVehicle(object):
       #
       elif self.state == States.RUNNING and self.mode == Modes.REMOTE:
         self.output_arduino(self.steering, self.throttle)
-#        time.sleep(0.2)
-        time.sleep(0.1)
+
+        start_t = time.time()
+        Y = utils.read_uyvy(FRAMEFNAME, cnn_config) # Y is of shape (1, :, :, 1) or (1, :, :, 3)
+        if Y is None:
+          print "image not acquired"
+          continue
+
+        # predict steering and throttle
+        s, t = self.model.predict(Y[0:1])
+        self.p_steering = utils.bucket2steering(np.argmax(s[0]))
+        self.p_throttle = utils.bucket2throttle(np.argmax(t[0]))
+
+        dt = time.time() - start_t
+        print self.p_steering, self.p_throttle, dt
+
+        time.sleep(0.01)
+#        time.sleep(0.05)
       #
       # ------------------------------------------------------------
       #
