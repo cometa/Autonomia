@@ -233,6 +233,10 @@ class CometaClient(object):
           pass
 
       if not data:
+        if self._use_ssl:
+          # ssl read may return no data
+          continue
+          
         # handle errors as disconnections and try to reconnect to the server
         print "Network error in receive loop (no data). Reconnecting..."
         try:
