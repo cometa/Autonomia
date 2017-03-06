@@ -107,7 +107,7 @@ def main(argv):
   car = RCVehicle(config, syslog)
 
   # Initialize camera streamer
-  streamer.init(config, syslog, car)
+  streamer.init(config, syslog)
 
   # Start the vehicle with default training mode 
   car.start()
@@ -115,7 +115,8 @@ def main(argv):
 
   # Export the vechicle object to the API module
   api.car = car
-
+  streamer.car = car
+  
   gps = None
   last_second, last_telemetry = 0., 0.
   while car.state:
