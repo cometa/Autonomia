@@ -218,6 +218,7 @@ def video_start(telem):
 
     # output the image
     o_pipe.stdin.write(rgb_img.tostring())
+    i_pipe.stdout.flush()
 
 """
 ffmpeg -i ../1488768815.flv  -vcodec rawvideo -pix_fmt yuyv422 -f image2  %03d.raw
