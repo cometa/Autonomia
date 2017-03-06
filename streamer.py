@@ -126,7 +126,7 @@ def video_start(telem):
   except:
     log("Error cannot start the video streamer. Streamer not defined in config.json")
     return None
-      
+
   i_command = [ pname,
             '-r', '30',
             '-use_wallclock_as_timestamps', '1',
@@ -145,7 +145,7 @@ def video_start(telem):
         '-vcodec','rawvideo',
         '-s', '320x240', # size of one frame
 #         '-pix_fmt', 'rgb24',
-        '-pix_fmt', 'rgb24', #'yuyv422',
+        '-pix_fmt', 'yuyv422', #'yuyv422', rgb24
         '-r', '30', # frames per second
         '-i', 'pipe:0', # The imput comes from a pipe
         '-an', # Tells FFMPEG not to expect any audio
@@ -184,7 +184,7 @@ def video_start(telem):
     #rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
 
     rgb_img = img
-  #  rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV420p2RGB) 
+    rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV420p2RGB) 
 
     # draw a center rectangle
     cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
