@@ -204,7 +204,7 @@ def video_start(telem):
 #    cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
 
     s = "%04d: %03d %03d" %  (count, car.steering, car.throttle)
-    cv2.putText(rgb_img, s,(5,10), font, .25, (255,0,0), 1) 
+    cv2.putText(rgb_img, s,(5,5), font, .4, (0,255,0), 1) 
 #    s = "%04d %d" % (count, now)
 #    cv2.putText(rgb_img, s,(25,50), font, .5, (255,255,0), 1) 
     count += 1
