@@ -181,10 +181,10 @@ def video_start(telem):
     img = f.reshape(rows, cols, 3) # 2) 
 
     # convert to RGB
-    #rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
+    rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
 
-    rgb_img = img
-    rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV420p2RGB) 
+ #   rgb_img = img
+ #   rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV420p2RGB) 
 
     # draw a center rectangle
     cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
