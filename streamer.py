@@ -173,21 +173,22 @@ def video_start(telem):
             '-r', '30',
             '-use_wallclock_as_timestamps', '1',
             '-f', 'v4l2',
-            '-vcodec', 'h264',
             '-i', '/dev/video0',
-#           '-vb','1000k',
-#           '-f', 'image2pipe',
-#           '-pix_fmt', 'yuyv422',
-#           '-vcodec', 'rawvideo', 
+            '-vb','1000k',
+            '-f', 'image2pipe',
+#            '-pix_fmt', 'yuyv422',
+#            '-vcodec', 'rawvideo',
+#            '-c:v', 'h264_omx',
             '-']
   i_pipe = sp.Popen(i_command, stdout = sp.PIPE, bufsize=10**5)
 
   url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
 
   o_command = [ pname,
-        '-vcodec','copy',
-        '-s', '320x240', # size of one frame
+#        '-vcodec','copy',
+#        '-s', '320x240', # size of one frame
 #         '-pix_fmt', 'rgb24',
+        '-f', 'image2pipe',
         '-i', 'pipe:0', # The imput comes from a pipe
         '-f','flv',
         url ]
@@ -222,9 +223,8 @@ def video_start(telem):
  #     car.com.send_data(json.dumps(msg))    
 
     f = np.fromstring(raw_image, dtype=np.uint8)
+   
 
-    f[0] = car.steering
-    f[1] = car.throttle
     o_pipe.stdin.write(f.tostring())
     i_pipe.stdout.flush()
     continue
