@@ -194,4 +194,4 @@ def video_start(telem):
   #  dst = cv2.warpAffine(rgb_img,M,(width,height))
 
     # output the image
-    o_pipe.stdin.write(dst.tostring())
+    o_pipe.stdin.write(rgb_img.tostring())
