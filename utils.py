@@ -54,7 +54,7 @@ def isanumber(x):
 def buildKey(mac, secret):
     """Return the camera streaming key."""
     h = hmac.new(secret, mac, digestmod=hashlib.sha256).hexdigest()
-    return mac + '-' + h[0:32]
+    return mac + ':' + h[0:32]
 
 # images are aquired by ffmpeg -s 320x240 -pix_fmt  yuyv422 
 def read_uyvy(filename, config, rows=240, cols=320):
