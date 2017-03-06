@@ -32,6 +32,8 @@ config=None
 camera=None
 car=None
 
+streaming=False
+
 def init(conf, logger, carobj):
   global config, log, camera
 
@@ -62,6 +64,10 @@ def init(conf, logger, carobj):
 
 def video_stop():
   """ Stop running video capture streamer """
+
+  streaming = True
+  return
+
   try:  
     pname = config['video']['streamer']
   except:
@@ -145,7 +151,7 @@ def video_start(telem):
         '-vcodec','rawvideo',
         '-s', '320x240', # size of one frame
 #         '-pix_fmt', 'rgb24',
-        '-pix_fmt', 'yuyv422', #'yuyv422', rgb24
+        '-pix_fmt', 'rgb24', #'yuyv422', rgb24
         '-r', '30', # frames per second
         '-i', 'pipe:0', # The imput comes from a pipe
         '-an', # Tells FFMPEG not to expect any audio
@@ -168,7 +174,8 @@ def video_start(telem):
 
   image_size = rows * cols * 2 # *3
 
-  while True:
+  streaming = True
+  while streaming:
     raw_image = i_pipe.stdout.read(image_size)
 
     if telem:
@@ -195,3 +202,5 @@ def video_start(telem):
 
     # output the image
     o_pipe.stdin.write(rgb_img.tostring())
+
+    
