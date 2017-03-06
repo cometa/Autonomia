@@ -178,7 +178,7 @@ def video_start(telem):
     f = np.fromstring(raw_image, dtype=np.uint8)
     i_pipe.stdout.flush()
 
-    img = f.reshape(rows, cols, 3) # 2) 
+    img = f.reshape(rows, cols, 2) 
 
     # convert to RGB
     rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
