@@ -120,7 +120,14 @@ def __video_start(telem):
   return pid
 
 def video_start(telem):
-  i_command = [ FFMPEG,
+
+  try:  
+    pname = config['video']['streamer']
+  except:
+    log("Error cannot start the video streamer. Streamer not defined in config.json")
+    return None
+      
+  i_command = [ pname,
             '-r', '30',
             '-use_wallclock_as_timestamps', '1',
             '-f', 'v4l2',
@@ -133,7 +140,7 @@ def video_start(telem):
 
   url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
 
-  o_command = [ FFMPEG,
+  o_command = [ pname,
         '-f', 'rawvideo',
         '-vcodec','rawvideo',
         '-s', '320x240', # size of one frame
