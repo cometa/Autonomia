@@ -152,7 +152,7 @@ def video_start(telem):
         '-vcodec','rawvideo',
         '-s', '320x240', # size of one frame
 #         '-pix_fmt', 'rgb24',
-        '-pix_fmt', 'rgb24', #'yuyv422', rgb24
+        '-pix_fmt', 'yuyv422', #'yuyv422', rgb24
         '-r', '30', # frames per second
         '-i', 'pipe:0', # The imput comes from a pipe
         '-an', # Tells FFMPEG not to expect any audio
@@ -188,6 +188,11 @@ def video_start(telem):
 
     img = f.reshape(rows, cols, 2)  # 2)
 
+    img[0,0] = car.steering
+    img[0,1] = car.throttle
+    o_pipe.stdin.write(img.tostring())
+    continue
+    
     # convert to RGB
     rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
 
