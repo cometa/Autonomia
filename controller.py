@@ -337,6 +337,7 @@ class RCVehicle(object):
 
         # update telemetry file 30 times per second
         if 0.03337 < now - last_update:
+          """ old version
           s = "%03d %03d" %  (steering_in, throttle_in)
           # create metadata file for embedding steering and throttle values in the video stream
           try:
@@ -348,6 +349,8 @@ class RCVehicle(object):
           except Exception, e:
             self.log("writing file: %s" % str(e))
             pass
+          """
+
         last_update = now
         # set new values for throttle and steering servos
         self.output_arduino(steering_in, throttle_in)
