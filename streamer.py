@@ -175,6 +175,7 @@ def video_start(telem):
   cols = width
 
   image_size = rows * cols * 2 # *3
+  font = cv2.FONT_HERSHEY_SIMPLEX
 
   streaming = True
   while streaming:
@@ -197,6 +198,10 @@ def video_start(telem):
 
     # draw a center rectangle
     cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
+
+    s = "%03d %03d" %  (car.steering, car.throttle)
+    cv2.putText(img, s,(10,50), font, 1,(255,255,255),2)
+
   #  M = cv2.getRotationMatrix2D((width/2,height/2),180,1)
 
     # rotate the image 90 degrees twice and bring back to normal
