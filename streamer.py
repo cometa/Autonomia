@@ -129,7 +129,6 @@ def __video_start(telem):
   return pid
 
 def video_start(telem):
-
   try:  
     pname = config['video']['streamer']
   except:
@@ -145,7 +144,7 @@ def video_start(telem):
             '-f', 'image2pipe',
             '-pix_fmt', 'yuyv422',
             '-vcodec', 'rawvideo', '-']
-  #i_pipe = sp.Popen(i_command, stdout = sp.PIPE, bufsize=10**5)
+  i_pipe = sp.Popen(i_command, stdout = sp.PIPE, bufsize=10**5)
 
   url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
 
@@ -158,6 +157,7 @@ def video_start(telem):
         '-r', '30', # frames per second
         '-i', 'pipe:0', # The imput comes from a pipe
         '-an', # Tells FFMPEG not to expect any audio
+#            '-c:v', 'h264_omx',
         '-c:v','libx264',
         '-profile:v','main',
         '-preset','ultrafast',
@@ -165,31 +165,6 @@ def video_start(telem):
         '-b:v','1000k',
         '-bufsize','2000k',
         '-g','30',
-        '-f','flv',
-        url ]
-  #o_pipe = sp.Popen(o_command, stdin=sp.PIPE, stderr=sp.PIPE)
-
-  i_command = [ pname,
-            '-r', '30',
-            '-use_wallclock_as_timestamps', '1',
-            '-f', 'v4l2',
-            '-i', '/dev/video0',
-            '-vb','1000k',
-            '-f', 'image2pipe',
-#            '-pix_fmt', 'yuyv422',
-#            '-vcodec', 'rawvideo',
-#            '-c:v', 'h264_omx',
-            '-']
-  i_pipe = sp.Popen(i_command, stdout = sp.PIPE, bufsize=10**5)
-
-  url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
-
-  o_command = [ pname,
-#        '-vcodec','copy',
-#        '-s', '320x240', # size of one frame
-#         '-pix_fmt', 'rgb24',
-        '-f', 'image2pipe',
-        '-i', 'pipe:0', # The imput comes from a pipe
         '-f','flv',
         url ]
   o_pipe = sp.Popen(o_command, stdin=sp.PIPE, stderr=sp.PIPE)
@@ -219,17 +194,7 @@ def video_start(telem):
       ret['c'] = count
       car.com.send_data(json.dumps(ret))
 
- #     msg = car.telemetry()
- #     car.com.send_data(json.dumps(msg))    
-
     f = np.fromstring(raw_image, dtype=np.uint8)
-   
-
-    o_pipe.stdin.write(f.tostring())
-    i_pipe.stdout.flush()
-    continue
-
-#    i_pipe.stdout.flush()
     img = f.reshape(rows, cols, 2)  # 2)
 
     # convert to RGB
@@ -238,10 +203,10 @@ def video_start(telem):
     # draw a center rectangle
 #    cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
 
-    s = "%03d %03d" %  (car.steering, car.throttle)
-    cv2.putText(rgb_img, s,(25,40), font, .5, (0,255,0), 1) 
-    s = "%04d %d" % (count, now)
-    cv2.putText(rgb_img, s,(25,50), font, .5, (0,255,0), 1) 
+    s = "%04d: %03d %03d" %  (count, car.steering, car.throttle)
+    cv2.putText(rgb_img, s,(15,20), font, .5, (255,255,0), 1) 
+#    s = "%04d %d" % (count, now)
+#    cv2.putText(rgb_img, s,(25,50), font, .5, (255,255,0), 1) 
     count += 1
   #  M = cv2.getRotationMatrix2D((width/2,height/2),180,1)
 
@@ -265,4 +230,26 @@ img[0,0,1]
 pass through
 ./ffmpeg  -r 30 -use_wallclock_as_timestamps 1  -thread_queue_size 512  -f v4l2 -vcodec h264 -i /dev/video0 -vcodec copy -f flv rtmp://stream.cometa.io:12345/src/74DA388EAC61
 
+ffmpeg  -r 30 -use_wallclock_as_timestamps 1  -thread_queue_size 512  -f v4l2  -i /dev/video0 -c:v h264_omx -r 30 -g 60 -f flv rtmp://stream.cometa.io:12345/src/74DA388EAC61
+
+  i_command = [ pname,
+            '-r', '30',
+            '-use_wallclock_as_timestamps', '1',
+            '-f', 'v4l2',
+            '-i', '/dev/video0',
+            '-vb','1000k',
+            '-f', 'image2pipe',
+            '-']
+
+  o_command = [ pname,
+        '-f', 'image2pipe',
+        '-i', 'pipe:0', # The imput comes from a pipe
+        '-f','flv',
+        url ]
+    f = np.fromstring(raw_image, dtype=np.uint8)
+
+
+    o_pipe.stdin.write(f.tostring())
+    i_pipe.stdout.flush()
+    continue
 """
