@@ -191,7 +191,7 @@ def video_start(telem):
       ret['s'] = car.steering
       ret['t'] = car.throttle
       ret['c'] = count
-      car.com.send_data(json.dumps(s))
+      car.com.send_data(json.dumps(ret))
 
  #     msg = car.telemetry()
  #     car.com.send_data(json.dumps(msg))    
