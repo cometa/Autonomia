@@ -72,7 +72,7 @@ def main(argv):
   device_id = Runtime.get_serial()
   config['serial'] = device_id
   # override camera key with new format
-  config['video']['key'] = utils.buildKey(device_id, application_id) + ':' + '1'
+  config['video']['key'] = utils.buildKey(device_id, str(application_id) + ':' + '1'
 
   # Instantiate a Cometa object
   com = CometaClient(cometa_server, cometa_port, application_id, config['cometa']['ssl'], syslog)
