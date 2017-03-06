@@ -145,7 +145,7 @@ def video_start(telem):
             '-f', 'image2pipe',
             '-pix_fmt', 'yuyv422',
             '-vcodec', 'rawvideo', '-']
-  i_pipe = sp.Popen(i_command, stdout = sp.PIPE, bufsize=10**5)
+  #i_pipe = sp.Popen(i_command, stdout = sp.PIPE, bufsize=10**5)
 
   url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
 
@@ -167,7 +167,32 @@ def video_start(telem):
         '-g','30',
         '-f','flv',
         url ]
+  #o_pipe = sp.Popen(o_command, stdin=sp.PIPE, stderr=sp.PIPE)
+
+  i_command = [ pname,
+            '-r', '30',
+            '-use_wallclock_as_timestamps', '1',
+            '-f', 'v4l2',
+            '-vcodec', 'h264',
+            '-i', '/dev/video0',
+#           '-vb','1000k',
+#           '-f', 'image2pipe',
+#           '-pix_fmt', 'yuyv422',
+#           '-vcodec', 'rawvideo', 
+            '-']
+  i_pipe = sp.Popen(i_command, stdout = sp.PIPE, bufsize=10**5)
+
+  url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
+
+  o_command = [ pname,
+        '-vcodec','copy',
+        '-s', '320x240', # size of one frame
+#         '-pix_fmt', 'rgb24',
+        '-i', 'pipe:0', # The imput comes from a pipe
+        '-f','flv',
+        url ]
   o_pipe = sp.Popen(o_command, stdin=sp.PIPE, stderr=sp.PIPE)
+
 
   width = 320 # 640
   height = 240 #480
@@ -197,6 +222,13 @@ def video_start(telem):
  #     car.com.send_data(json.dumps(msg))    
 
     f = np.fromstring(raw_image, dtype=np.uint8)
+
+    f[0] = car.steering
+    f[1] = car.throttle
+    o_pipe.stdin.write(f.tostring())
+    i_pipe.stdout.flush()
+    continue
+
 #    i_pipe.stdout.flush()
     img = f.reshape(rows, cols, 2)  # 2)
 
@@ -229,5 +261,8 @@ ff = np.fromstring(i,dtype=np.uint8)
 img = ff.reshape(240, 320, 2)
 img[0,0,0]
 img[0,0,1]
+
+pass through
+./ffmpeg  -r 30 -use_wallclock_as_timestamps 1  -thread_queue_size 512  -f v4l2 -vcodec h264 -i /dev/video0 -vcodec copy -f flv rtmp://stream.cometa.io:12345/src/74DA388EAC61
 
 """
