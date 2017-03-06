@@ -21,6 +21,7 @@ import subprocess as sp
 import numpy as np
 import cv2
 import json
+import time
 
 # filename to fetch telemetry from -- updated atomically by the controller loop at 30 Hz
 TELEMFNAME = '/tmpfs/meta.txt'
@@ -177,31 +178,33 @@ def video_start(telem):
   image_size = rows * cols * 2 # *3
   font = cv2.FONT_HERSHEY_SIMPLEX
 
+  count = 1
   streaming = True
   while streaming:
     raw_image = i_pipe.stdout.read(image_size)
-
+    now = int(time.time() * 1000)
     if telem:
-      msg = car.telemetry()
-      car.com.send_data(json.dumps(msg))    
+      s = '{"time":%d,"device_id":"%s","v":[%03d,%03d,%4d]}' % (now, car.serial, car.steering, car.throttle, count)
+      car.com.send_data(s)
+
+ #     msg = car.telemetry()
+ #     car.com.send_data(json.dumps(msg))    
 
     f = np.fromstring(raw_image, dtype=np.uint8)
-    i_pipe.stdout.flush()
-
+#    i_pipe.stdout.flush()
     img = f.reshape(rows, cols, 2)  # 2)
 
     # convert to RGB
     rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
 
- #   rgb_img = img
- #   rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV420p2RGB) 
-
     # draw a center rectangle
-    cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
+#    cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
 
     s = "%03d %03d" %  (car.steering, car.throttle)
-    cv2.putText(img, s,(10,50), font, 6, (200,255,155), 13,cv2.LINE_AA)
-
+    cv2.putText(rgb_img, s,(25,40), font, .5, (0,255,0), 1) 
+    s = "%04d %d" % (count, now)
+    cv2.putText(rgb_img, s,(25,50), font, .5, (0,255,0), 1) 
+    count += 1
   #  M = cv2.getRotationMatrix2D((width/2,height/2),180,1)
 
     # rotate the image 90 degrees twice and bring back to normal
