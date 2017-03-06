@@ -180,12 +180,18 @@ def video_start(telem):
 
   count = 1
   streaming = True
+  ret = {}
+  ret['device_id'] = car.serial
+
   while streaming:
     raw_image = i_pipe.stdout.read(image_size)
     now = int(time.time() * 1000)
     if telem:
-      s = '{"time":%d,"device_id":"%s","v":[%03d,%03d,%4d]}' % (now, car.serial, car.steering, car.throttle, count)
-      car.com.send_data(s)
+      ret['time'] = str(now)
+      ret['s'] = car.steering
+      ret['t'] = car.throttle
+      ret['c'] = count
+      car.com.send_data(json.dumps(s))
 
  #     msg = car.telemetry()
  #     car.com.send_data(json.dumps(msg))    
