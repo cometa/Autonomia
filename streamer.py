@@ -188,11 +188,6 @@ def video_start(telem):
 
     img = f.reshape(rows, cols, 2)  # 2)
 
-    img[0,0,0] = car.steering
-    img[0,0,1] = car.throttle
-    o_pipe.stdin.write(img.tostring())
-    continue
-
     # convert to RGB
     rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
 
@@ -206,8 +201,6 @@ def video_start(telem):
     # rotate the image 90 degrees twice and bring back to normal
   #  dst = cv2.warpAffine(rgb_img,M,(width,height))
 
-    rgb_img[0,0,0] = 90 #car.steering 
-    rgb_img[0,0,1] = 91 #car.throttle
     # output the image
     o_pipe.stdin.write(rgb_img.tostring())
 
