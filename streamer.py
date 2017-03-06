@@ -153,7 +153,7 @@ def video_start(telem):
         '-vcodec','rawvideo',
         '-s', '320x240', # size of one frame
 #         '-pix_fmt', 'rgb24',
-        '-pix_fmt', 'yuyv422', #'yuyv422', rgb24
+        '-pix_fmt', 'rgb24', #'yuyv422', rgb24
         '-r', '30', # frames per second
         '-i', 'pipe:0', # The imput comes from a pipe
         '-an', # Tells FFMPEG not to expect any audio
@@ -200,7 +200,7 @@ def video_start(telem):
     cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
 
     s = "%03d %03d" %  (car.steering, car.throttle)
-    cv2.putText(img, s,(10,50), font, 1,(255,255,255),2)
+    cv2.putText(img, s,(10,50), font, 6, (200,255,155), 13,cv2.LINE_AA)
 
   #  M = cv2.getRotationMatrix2D((width/2,height/2),180,1)
 
