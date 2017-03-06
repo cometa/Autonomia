@@ -20,6 +20,7 @@ import time
 import subprocess as sp
 import numpy as np
 import cv2
+import json
 
 # filename to fetch telemetry from -- updated atomically by the controller loop at 30 Hz
 TELEMFNAME = '/tmpfs/meta.txt'
