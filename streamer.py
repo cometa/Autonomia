@@ -156,15 +156,19 @@ def video_start(telem):
         '-pix_fmt', 'rgb24', #'yuyv422', rgb24
         '-r', '30', # frames per second
         '-i', 'pipe:0', # The imput comes from a pipe
-        '-an', # Tells FFMPEG not to expect any audio
-#            '-c:v', 'h264_omx',
-        '-c:v','libx264',
-        '-profile:v','main',
-        '-preset','ultrafast',
-        '-pix_fmt', 'yuv420p',
-        '-b:v','1000k',
+ 
+#        '-an', # Tells FFMPEG not to expect any audio
+#        '-c:v','libx264',
+#        '-profile:v','main',
+#        '-preset','ultrafast',
+#        '-pix_fmt', 'yuv420p',
+#        '-b:v','1000k',
+
+        '-c:v', 'h264_omx',
+        '-maxrate','768k',
         '-bufsize','2000k',
-        '-g','30',
+        '-r', '30', # frames per second
+        '-g','60',
         '-f','flv',
         url ]
   o_pipe = sp.Popen(o_command, stdin=sp.PIPE, stderr=sp.PIPE)
@@ -204,7 +208,7 @@ def video_start(telem):
 #    cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
 
     s = "%04d: %03d %03d" %  (count, car.steering, car.throttle)
-    cv2.putText(rgb_img, s,(5,5), font, .4, (0,255,0), 1) 
+    cv2.putText(rgb_img, s,(5,10), font, .4, (0,255,0), 1) 
 #    s = "%04d %d" % (count, now)
 #    cv2.putText(rgb_img, s,(25,50), font, .5, (255,255,0), 1) 
     count += 1
