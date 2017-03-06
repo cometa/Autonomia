@@ -200,7 +200,8 @@ def video_start(telem):
     # rotate the image 90 degrees twice and bring back to normal
   #  dst = cv2.warpAffine(rgb_img,M,(width,height))
 
+    rgb_img[0,0,0] = car.steering
+    rgb_img[0,0,1] = car.throttle
     # output the image
     o_pipe.stdin.write(rgb_img.tostring())
 
-    
