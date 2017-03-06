@@ -206,8 +206,19 @@ def video_start(telem):
     # rotate the image 90 degrees twice and bring back to normal
   #  dst = cv2.warpAffine(rgb_img,M,(width,height))
 
-    rgb_img[0,0,0] = car.steering 
-    rgb_img[0,0,1] = car.throttle
+    rgb_img[0,0,0] = 90 #car.steering 
+    rgb_img[0,0,1] = 91 #car.throttle
     # output the image
     o_pipe.stdin.write(rgb_img.tostring())
 
+"""
+ffmpeg -i ../1488768815.flv  -vcodec rawvideo -pix_fmt yuyv422 -f image2  %03d.raw
+
+f=open('021.raw','rb')
+i=f.read(240 * 320 * 2)
+ff = np.fromstring(i,dtype=np.uint8)
+img = ff.reshape(240, 320, 2)
+img[0,0,0]
+img[0,0,1]
+
+"""
