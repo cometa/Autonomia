@@ -120,46 +120,60 @@ def pipeline(image):
     
     multiframe_l = {'x': [val for sublist in lineLeft.allx for val in sublist],
                                             'y': [val for sublist in lineLeft.ally for val in sublist] }
-    #fit to polynomial in pixel space: right line
-    fit_lineRight = lineRight.polynomial_fit(multiframe_r)
-    #fit to polynomial in real space: right line
-    fit_lineRight_real = lineRight.polynomial_fit({'x': [i*ym_per_pix for i in multiframe_r['x']], 
-                                                   'y': [i*xm_per_pix for i in multiframe_r['y']]})
-    #fit to polynomial in pixel space: left line
-    fit_lineLeft = lineLeft.polynomial_fit(multiframe_l)
-    #fit to polynomial in real space: left line
-    fit_lineLeft_real = lineLeft.polynomial_fit({'x': [i*ym_per_pix for i in multiframe_l['x']], 
-                                                 'y': [i*xm_per_pix for i in multiframe_l['y']]})
-    
-    
-    # check approval of fitted right line
-    if lineRight.approve_line(fit_lineRight, xmax=image.shape[0]):
-        # update trackers
-        lineRight.update_tracker('bestfit', fit_lineRight)
-        lineRight.update_tracker('bestfit_real', fit_lineRight_real)
-        radOfCurv_r = lineRight.compute_radOfCurvature(fit_lineRight_real, pt_curvature*ym_per_pix)
-        lineRight.update_tracker('radOfCurvature', radOfCurv_r)
-    else:
-        # use coeffs of the previous frame 
+
+    if len(multiframe_r['x']) == 0 or len(multiframe_l['x']) == 0:
         fit_lineRight = {'a2': lineRight.bestfit['a2'][-1], 'a1': lineRight.bestfit['a1'][-1],
                         'a0': lineRight.bestfit['a0'][-1]}
         #use radius of curvature of previous frame
         radOfCurv_r = lineRight.radOfCurv_tracker[-1]
-        
-    # check approval of fitted left line
-    if lineLeft.approve_line(fit_lineLeft, xmax=image.shape[0]):
-        #update trackers
-        lineLeft.update_tracker('bestfit', fit_lineLeft)
-        lineLeft.update_tracker('bestfit_real', fit_lineLeft_real)
-        radOfCurv_l = lineLeft.compute_radOfCurvature(fit_lineLeft_real, pt_curvature*ym_per_pix)
-        lineLeft.update_tracker('radOfCurvature', radOfCurv_l)
-    else:
         # use coeffs of the previous frame 
         fit_lineLeft = {'a2': lineLeft.bestfit['a2'][-1], 
                          'a1': lineLeft.bestfit['a1'][-1],
                          'a0': lineLeft.bestfit['a0'][-1]}
         #use radius of curvature of previous frame
         radOfCurv_l = lineLeft.radOfCurv_tracker[-1]
+
+    else:
+        #fit to polynomial in pixel space: right line
+        fit_lineRight = lineRight.polynomial_fit(multiframe_r)
+        #fit to polynomial in real space: right line
+        fit_lineRight_real = lineRight.polynomial_fit({'x': [i*ym_per_pix for i in multiframe_r['x']], 
+                                                   'y': [i*xm_per_pix for i in multiframe_r['y']]})
+        # fit to polynomial in pixel space: left line
+        fit_lineLeft = lineLeft.polynomial_fit(multiframe_l)
+        #fit to polynomial in real space: left line
+        fit_lineLeft_real = lineLeft.polynomial_fit({'x': [i*ym_per_pix for i in multiframe_l['x']], 
+                                                 'y': [i*xm_per_pix for i in multiframe_l['y']]})
+    
+    
+        # check approval of fitted right line
+        if lineRight.approve_line(fit_lineRight, xmax=image.shape[0]):
+            # update trackers
+            lineRight.update_tracker('bestfit', fit_lineRight)
+            lineRight.update_tracker('bestfit_real', fit_lineRight_real)
+            radOfCurv_r = lineRight.compute_radOfCurvature(fit_lineRight_real, pt_curvature*ym_per_pix)
+            lineRight.update_tracker('radOfCurvature', radOfCurv_r)
+        else:
+            # use coeffs of the previous frame 
+            fit_lineRight = {'a2': lineRight.bestfit['a2'][-1], 'a1': lineRight.bestfit['a1'][-1],
+                        'a0': lineRight.bestfit['a0'][-1]}
+            #use radius of curvature of previous frame
+            radOfCurv_r = lineRight.radOfCurv_tracker[-1]
+        
+        # check approval of fitted left line
+        if lineLeft.approve_line(fit_lineLeft, xmax=image.shape[0]):
+            #update trackers
+            lineLeft.update_tracker('bestfit', fit_lineLeft)
+            lineLeft.update_tracker('bestfit_real', fit_lineLeft_real)
+            radOfCurv_l = lineLeft.compute_radOfCurvature(fit_lineLeft_real, pt_curvature*ym_per_pix)
+            lineLeft.update_tracker('radOfCurvature', radOfCurv_l)
+        else:
+            # use coeffs of the previous frame 
+            fit_lineLeft = {'a2': lineLeft.bestfit['a2'][-1], 
+                         'a1': lineLeft.bestfit['a1'][-1],
+                         'a0': lineLeft.bestfit['a0'][-1]}
+            #use radius of curvature of previous frame
+            radOfCurv_l = lineLeft.radOfCurv_tracker[-1]
         
     
     #display lane and best polynomial fits
