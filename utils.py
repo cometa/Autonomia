@@ -16,7 +16,7 @@ limitations under the License.
 """
 
 import math
-import hashlib
+import hashlib, hmac
 import numpy as np
 import cv2
 
@@ -53,8 +53,8 @@ def isanumber(x):
 
 def buildKey(mac, secret):
     """Return the camera streaming key."""
-    h = hmac.new(secret, message, digestmod=hashlib.sha256).hexdigest()
-    return mac + '-' + h[0:32]
+    h = hmac.new(secret, mac, digestmod=hashlib.sha256).hexdigest()
+    return mac + ':' + h[0:32]
 
 # images are aquired by ffmpeg -s 320x240 -pix_fmt  yuyv422 
 def read_uyvy(filename, config, rows=240, cols=320):

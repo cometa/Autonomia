@@ -71,6 +71,8 @@ def main(argv):
   # use the machine's MAC address as Cometa device ID
   device_id = Runtime.get_serial()
   config['serial'] = device_id
+  # override camera key with new format
+  config['video']['key'] = utils.buildKey(device_id, str(application_id)) + ':' + '1'
 
   # Instantiate a Cometa object
   com = CometaClient(cometa_server, cometa_port, application_id, config['cometa']['ssl'], syslog)
@@ -101,11 +103,11 @@ def main(argv):
   if com.debug:
       print "Server returned:", ret
 
-  # Initialize camera streamer
-  streamer.init(config, syslog)
-
   # Create a car controller object
   car = RCVehicle(config, syslog)
+
+  # Initialize camera streamer
+  streamer.init(config, syslog)
 
   # Start the vehicle with default training mode 
   car.start()
@@ -113,7 +115,8 @@ def main(argv):
 
   # Export the vechicle object to the API module
   api.car = car
-
+  streamer.car = car
+  
   gps = None
   last_second, last_telemetry = 0., 0.
   while car.state:

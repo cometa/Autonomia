@@ -17,7 +17,11 @@ limitations under the License.
 
 import os
 import time
-import subprocess
+import subprocess as sp
+import numpy as np
+import cv2
+import json
+import time
 
 # filename to fetch telemetry from -- updated atomically by the controller loop at 30 Hz
 TELEMFNAME = '/tmpfs/meta.txt'
@@ -28,6 +32,11 @@ FRAMEFNAME = '/tmpfs/frame.yuv'
 log=None
 config=None
 camera=None
+
+# Vehicle object instantiated in the application module
+car=None
+
+streaming=False
 
 def init(conf, logger):
   global config, log, camera
@@ -43,7 +52,7 @@ def init(conf, logger):
   print videodevs
   # create an empty telemetry file
   s = 'echo > ' + TELEMFNAME 
-  subprocess.check_call(s, shell=True)
+  sp.check_call(s, shell=True)
 
   # use the first camera
   camera=videodevs[0]
@@ -52,12 +61,16 @@ def init(conf, logger):
   s = 'v4l2-ctl --device=' + camera + ' --set-fmt-video=width=320,height=240,pixelformat=1'
   log("Setting camera: %s" % s)
   # execute and wait for completion
-  subprocess.check_call(s, shell=True)
+  sp.check_call(s, shell=True)
 
   return camera
 
 def video_stop():
   """ Stop running video capture streamer """
+
+  streaming = True
+  return
+
   try:  
     pname = config['video']['streamer']
   except:
@@ -68,7 +81,7 @@ def video_stop():
   FNULL = open(os.devnull, 'w')
   try:
     # execute and wait for completion
-    subprocess.check_call(s, shell=True, stderr=FNULL) 
+    sp.check_call(s, shell=True, stderr=FNULL) 
   except Exception, e:
     # fails when no ffmpeg is running
     if config['app_params']['verbose']: 
@@ -77,7 +90,7 @@ def video_stop():
       pass
   return
 
-def video_start(telem):
+def __video_start(telem):
   """ Start a video streamer """ 
   global config, log, camera
 
@@ -102,7 +115,7 @@ def video_start(telem):
     url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
     params = params + ['-vf', format, '-threads', '4', '-r', '30', '-g', '60', '-f', 'flv', url]
     # spawn a process and do not wait
-    pid = subprocess.Popen(params, stderr=FNULL)
+    pid = sp.Popen(params, stderr=FNULL)
   else:
     # streaming video and saving the last frame for CNN prediction
     params = [pname, '-r','30', '-use_wallclock_as_timestamps', '1', '-thread_queue_size', '512', '-f', 'v4l2', '-i', camera, '-c:v ', vcodec, '-maxrate', '768k', '-bufsize', '960k']
@@ -112,5 +125,135 @@ def video_start(telem):
     # to transcode use format YUYV422:
     # $ ffmpeg -vcodec rawvideo -s 320x240 -r 1 -pix_fmt  yuyv422  -i frame.yuv rawframe.jpg
     # spawn a process and do not wait
-    pid = subprocess.Popen(params, stderr=FNULL)
+    pid = sp.Popen(params, stderr=FNULL)
   return pid
+
+def video_start(telem):
+  try:  
+    pname = config['video']['streamer']
+  except:
+    log("Error cannot start the video streamer. Streamer not defined in config.json")
+    return None
+
+  i_command = [ pname,
+            '-r', '30',
+            '-use_wallclock_as_timestamps', '1',
+            '-f', 'v4l2',
+            '-i', '/dev/video0',
+            '-vb','1000k',
+            '-f', 'image2pipe',
+            '-pix_fmt', 'yuyv422',
+            '-vcodec', 'rawvideo', '-']
+  i_pipe = sp.Popen(i_command, stdout = sp.PIPE, bufsize=10**5)
+
+  url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
+
+  o_command = [ pname,
+        '-f', 'rawvideo',
+        '-vcodec','rawvideo',
+        '-s', '320x240', # size of one frame
+#         '-pix_fmt', 'rgb24',
+        '-pix_fmt', 'rgb24', #'yuyv422', rgb24
+        '-r', '30', # frames per second
+        '-i', 'pipe:0', # The imput comes from a pipe
+ 
+#        '-an', # Tells FFMPEG not to expect any audio
+#        '-c:v','libx264',
+#        '-profile:v','main',
+#        '-preset','ultrafast',
+#        '-pix_fmt', 'yuv420p',
+#        '-b:v','1000k',
+
+        '-c:v', 'h264_omx',
+        '-maxrate','768k',
+        '-bufsize','2000k',
+        '-r', '30', # frames per second
+        '-g','60',
+        '-f','flv',
+        url ]
+  o_pipe = sp.Popen(o_command, stdin=sp.PIPE, stderr=sp.PIPE)
+
+
+  width = 320 # 640
+  height = 240 #480
+
+  rows = height
+  cols = width
+
+  image_size = rows * cols * 2 # *3
+  font = cv2.FONT_HERSHEY_SIMPLEX
+
+  count = 1
+  streaming = True
+  ret = {}
+  ret['device_id'] = car.serial
+
+  while streaming:
+    raw_image = i_pipe.stdout.read(image_size)
+    now = int(time.time() * 1000)
+    if telem:
+      ret['time'] = str(now)
+      ret['s'] = car.steering
+      ret['t'] = car.throttle
+      ret['c'] = count
+      car.com.send_data(json.dumps(ret))
+
+    f = np.fromstring(raw_image, dtype=np.uint8)
+    img = f.reshape(rows, cols, 2)  # 2)
+
+    # convert to RGB
+    rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
+
+    # draw a center rectangle
+#    cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
+
+    s = "%04d: %03d %03d" %  (count, car.steering, car.throttle)
+    cv2.putText(rgb_img, s,(5,10), font, .4, (0,255,0), 1) 
+#    s = "%04d %d" % (count, now)
+#    cv2.putText(rgb_img, s,(25,50), font, .5, (255,255,0), 1) 
+    count += 1
+  #  M = cv2.getRotationMatrix2D((width/2,height/2),180,1)
+
+    # rotate the image 90 degrees twice and bring back to normal
+  #  dst = cv2.warpAffine(rgb_img,M,(width,height))
+
+    # output the image
+    o_pipe.stdin.write(rgb_img.tostring())
+    i_pipe.stdout.flush()
+
+"""
+ffmpeg -i ../1488768815.flv  -vcodec rawvideo -pix_fmt yuyv422 -f image2  %03d.raw
+
+f=open('021.raw','rb')
+i=f.read(240 * 320 * 2)
+ff = np.fromstring(i,dtype=np.uint8)
+img = ff.reshape(240, 320, 2)
+img[0,0,0]
+img[0,0,1]
+
+pass through
+./ffmpeg  -r 30 -use_wallclock_as_timestamps 1  -thread_queue_size 512  -f v4l2 -vcodec h264 -i /dev/video0 -vcodec copy -f flv rtmp://stream.cometa.io:12345/src/74DA388EAC61
+
+ffmpeg  -r 30 -use_wallclock_as_timestamps 1  -thread_queue_size 512  -f v4l2  -i /dev/video0 -c:v h264_omx -r 30 -g 60 -f flv rtmp://stream.cometa.io:12345/src/74DA388EAC61
+
+  i_command = [ pname,
+            '-r', '30',
+            '-use_wallclock_as_timestamps', '1',
+            '-f', 'v4l2',
+            '-i', '/dev/video0',
+            '-vb','1000k',
+            '-f', 'image2pipe',
+            '-']
+
+  o_command = [ pname,
+        '-f', 'image2pipe',
+        '-i', 'pipe:0', # The imput comes from a pipe
+        '-f','flv',
+        url ]
+    f = np.fromstring(raw_image, dtype=np.uint8)
+
+
+    o_pipe.stdin.write(f.tostring())
+    i_pipe.stdout.flush()
+    continue
+"""
