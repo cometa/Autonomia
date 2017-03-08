@@ -104,8 +104,8 @@ class Line():
         return  x-position of centroid, peak intensity and hotpixels_cnt in window 
         '''
         #crop image to window dimension
-        mask_window = image[ round( window['y0'] - window['height']):round(window['y0']), 
-                              round(window['x0']):round(window['x0']+ window['width'])]
+        mask_window = image[ int( round( window['y0'] - window['height'])) : int( round(window['y0'])), 
+                              int( round(window['x0'])) :int(round(window['x0']+ window['width']))]
         histogram = np.sum(mask_window, axis=0)
         centroid = np.argmax(histogram)
         hotpixels_cnt = np.sum(histogram)
@@ -140,7 +140,7 @@ class Line():
         #Initialize sliding window
         window = {'x0': centroid_starter - int(sliding_window_specs['width']/2), 'y0': image.shape[0], 
                   'width': sliding_window_specs['width'], 
-                  'height': round(image.shape[0]/sliding_window_specs['n_steps'])}
+                  'height': int(round(image.shape[0]/sliding_window_specs['n_steps']))}
 
         #Initialize log to store coordinates of hotpixels and log to store centroids coordinates at each step
         hotpixels_log = { 'x': [], 'y':[]}
@@ -157,7 +157,7 @@ class Line():
             #if >60% of window area is filled by hotpixels, increase window width
             if hotpixels_cnt/(window['width']*window['height']) > 0.6:
                 window['width']= window['width']*2
-                window['x0'] = round(window['x0'] - window['width']/2)
+                window['x0'] = int(round(window['x0'] - window['width']/2))
                 #Make sure window remains within image width
                 if (window['x0'] < 0): window['x0'] = 0   
                 if (window['x0'] + window['width']) > image.shape[1]: 
@@ -180,7 +180,7 @@ class Line():
            
             #set next position of window and use standard sliding window width
             window['width'] = sliding_window_specs['width']
-            window['x0'] = round(centroid - window['width']/2)
+            window['x0'] = int( round(centroid - window['width']/2) )
             window['y0'] = window['y0'] - window['height']
         
         return hotpixels_log

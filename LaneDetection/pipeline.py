@@ -37,7 +37,7 @@ bottom_crop = -40 #front-end car
 sliding_window_specs = {'width': 120, 'n_steps': 10} #number of steps vertical steps of sliding window
 
 buffer_sz = 9
-ym_per_pix = 12/450 # meters per pixel in y dimension
+ym_per_pix = 12/450. # meters per pixel in y dimension
 xm_per_pix = 3.7/911 # meters per pixel in x dimensio
 
 min_sz = 50
@@ -137,13 +137,11 @@ def pipeline(image):
         #fit to polynomial in pixel space: right line
         fit_lineRight = lineRight.polynomial_fit(multiframe_r)
         #fit to polynomial in real space: right line
-        fit_lineRight_real = lineRight.polynomial_fit({'x': [i*ym_per_pix for i in multiframe_r['x']], 
-                                                   'y': [i*xm_per_pix for i in multiframe_r['y']]})
+        fit_lineRight_real = lineRight.polynomial_fit({'x': [i*ym_per_pix for i in multiframe_r['x']], 'y': [i*xm_per_pix for i in multiframe_r['y']]})
         # fit to polynomial in pixel space: left line
         fit_lineLeft = lineLeft.polynomial_fit(multiframe_l)
         #fit to polynomial in real space: left line
-        fit_lineLeft_real = lineLeft.polynomial_fit({'x': [i*ym_per_pix for i in multiframe_l['x']], 
-                                                 'y': [i*xm_per_pix for i in multiframe_l['y']]})
+        fit_lineLeft_real = lineLeft.polynomial_fit({'x': [i*ym_per_pix for i in multiframe_l['x']], 'y': [i*xm_per_pix for i in multiframe_l['y']]})
     
     
         # check approval of fitted right line
@@ -169,9 +167,7 @@ def pipeline(image):
             lineLeft.update_tracker('radOfCurvature', radOfCurv_l)
         else:
             # use coeffs of the previous frame 
-            fit_lineLeft = {'a2': lineLeft.bestfit['a2'][-1], 
-                         'a1': lineLeft.bestfit['a1'][-1],
-                         'a0': lineLeft.bestfit['a0'][-1]}
+            fit_lineLeft = {'a2': lineLeft.bestfit['a2'][-1], 'a1': lineLeft.bestfit['a1'][-1], 'a0': lineLeft.bestfit['a0'][-1]}
             #use radius of curvature of previous frame
             radOfCurv_l = lineLeft.radOfCurv_tracker[-1]
         
