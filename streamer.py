@@ -67,14 +67,6 @@ def init(conf, logger):
 
   return camera
 
-def video_stop():
-  """ Stop running video capture streamer """
-
-  streaming = False
-  # wait for the thread to finish
-  video_thread.join(5)
-  return
-
 def video_start(telem):
   """
   The video is streamed with a pipeline:
@@ -191,6 +183,15 @@ def video_pipe(telem):
     o_pipe.stdin.write(car.frame.tostring())
     # flush the input buffer
     i_pipe.stdout.flush()
+  return
+
+
+def video_stop():
+  """ Stop running video capture streamer """
+
+  streaming = False
+  # wait for the thread to finish
+  video_thread.join(5)
   return
 
 #------------------------------------------------------------------
