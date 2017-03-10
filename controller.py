@@ -120,8 +120,11 @@ class RCVehicle(object):
       self.arport=setup_arduino(config, self.log) 
     # TODO: remember to create a board heartbeat thread
 
-    # Global lock
+    # Image frame 
     self.glock = threading.Lock()
+    self.rows = 240
+    self.cols = 320
+    self.frame = np.zeros(shape=(self.rows, self.cols, 3), dtype=np.uint8)
 
     # Start the main loop
     self.loop_t = threading.Thread(target=self.control_loop)
