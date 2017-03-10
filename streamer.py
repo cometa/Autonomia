@@ -168,7 +168,8 @@ def video_pipe(telem):
     img = f.reshape(rows, cols, 2)  # 2)
 
     # convert to RGB and assign to car object attribute
-    car.frame =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
+    #car.frame =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
+    rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
 
     # --- TEST only
     # draw a center rectangle
@@ -179,7 +180,7 @@ def video_pipe(telem):
 
     # print steering and throttle value into the image (for telemetry checking only)
     s = "%04d: %03d %03d" %  (count, car.steering, car.throttle)
-    cv2.putText(car.frame, s,(5,10), cv2.FONT_HERSHEY_SIMPLEX, .4, (0,255,0), 1) 
+    cv2.putText(rgb_img, s,(5,10), cv2.FONT_HERSHEY_SIMPLEX, .4, (0,255,0), 1) 
 
     # release the frame lock
     car.glock.release()
@@ -188,7 +189,7 @@ def video_pipe(telem):
     count += 1
 
     # output the frame to the ffmpeg output process
-    o_pipe.stdin.write(car.frame.tostring())
+    o_pipe.stdin.write(rgb_img.tostring())
     # flush the input buffer
     i_pipe.stdout.flush()
   return
