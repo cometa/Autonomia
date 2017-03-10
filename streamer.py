@@ -22,6 +22,7 @@ import numpy as np
 import cv2
 import json
 import time
+import threading
 
 # filename to fetch telemetry from -- updated atomically by the controller loop at 30 Hz
 TELEMFNAME = '/tmpfs/meta.txt'
