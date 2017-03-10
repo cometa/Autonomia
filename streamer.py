@@ -73,12 +73,16 @@ def video_start(telem):
      camera -> ffmpeg to stdout -> each frame is read and processed -> stdin into ffmpeg for RTMP push to server
   the streaming pipeline runs in a separate thread   
   """
+  global video_thread
+
   streaming = True
   video_thread = threading.Thread(target=video_pipe,args=(telem,))
   video_thread.start()
   return
 
-def video_pipe(telem):            
+def video_pipe(telem):    
+  global video_thread
+
   try:  
     pname = config['video']['streamer']
   except:
@@ -188,7 +192,7 @@ def video_pipe(telem):
 
 def video_stop():
   """ Stop running video capture streamer """
-
+  global video_thread
   streaming = False
   # wait for the thread to finish
   video_thread.join(5)
