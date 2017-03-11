@@ -188,9 +188,11 @@ def video_pipe(telem):
     o_pipe.stdin.write(car.frame.tostring())
     # flush the input buffer
     i_pipe.stdout.flush()
-  print 'exiting streaming loop'
-  os.killpg(os.getpgid(i_pipe.pid), signal.SIGTERM)
-  os.killpg(os.getpgid(o_pipe.pid), signal.SIGTERM)
+    
+  log('exiting streaming loop')
+  # terminate child processes
+  i_pipe.kill()
+  o_pipe.kill()
   return
 
 
