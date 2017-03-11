@@ -188,8 +188,8 @@ def video_pipe(telem):
     # flush the input buffer
     i_pipe.stdout.flush()
   print 'exiting streaming loop'
-  i_pipe.close()
-  o_pipe.close()
+  os.killpg(os.getpgid(i_pipe.pid), signal.SIGTERM)
+  os.killpg(os.getpgid(o_pipe.pid), signal.SIGTERM)
   return
 
 
@@ -199,21 +199,6 @@ def video_stop():
   video_thread.streaming = False
   # wait for the thread to finish
   video_thread.join(5)
-
-  try:  
-    pname = config['video']['streamer']
-  except:
-    log("Error cannot stop the video streamer. Streamer not defined in config.json")
-    return None  
-
-  s = 'killall ' + pname
-  FNULL = open(os.devnull, 'w')
-  try:
-    # execute and wait for completion
-    sp.check_call(s, shell=True, stderr=FNULL) 
-  except Exception, e:
-    # fails when no ffmpeg is running
-    log("Error stopping streamer. %s" % e)
   return
 
 #------------------------------------------------------------------
