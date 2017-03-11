@@ -196,6 +196,25 @@ def video_stop():
   video_thread.streaming = False
   # wait for the thread to finish
   video_thread.join(5)
+
+  try:  
+    pname = config['video']['streamer']
+  except:
+    log("Error cannot stop the video streamer. Streamer not defined in config.json")
+    return None  
+
+  s = 'killall ' + pname
+  FNULL = open(os.devnull, 'w')
+  try:
+    # execute and wait for completion
+    sp.check_call(s, shell=True, stderr=FNULL) 
+  except Exception, e:
+    # fails when no ffmpeg is running
+    if config['app_params']['verbose']: 
+      log("Error stopping streamer. %s" % e)
+    else:
+      pass
+
   return
 
 #------------------------------------------------------------------
