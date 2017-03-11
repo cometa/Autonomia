@@ -75,8 +75,8 @@ def video_start(telem):
   """
   global video_thread
 
-  streaming = True
   video_thread = threading.Thread(target=video_pipe,args=(telem,))
+#  video_thread.streaming = True
   video_thread.start()
   return
 
@@ -136,14 +136,14 @@ def video_pipe(telem):
 
   # frame counter -- image frame filenames will have this number once the stored video file is split with ffmpeg
   count = 1
-  streaming = True
+  #video_thread = threading.currentThread()
 
   # telemetry object sent for every frame
   ret = {}
   ret['device_id'] = car.serial   # constant for every frame
 
   # streaming loop
-  while streaming:
+  while getattr(video_thread, "streaming", True):
     # read frame bytes from ffmpeg input
     raw_image = i_pipe.stdout.read(image_size)
 
@@ -193,7 +193,7 @@ def video_pipe(telem):
 def video_stop():
   """ Stop running video capture streamer """
   global video_thread
-  streaming = False
+  video_thread.streaming = False
   # wait for the thread to finish
   video_thread.join(5)
   return
