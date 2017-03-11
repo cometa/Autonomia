@@ -188,7 +188,8 @@ def video_pipe(telem):
     # flush the input buffer
     i_pipe.stdout.flush()
   print 'exiting streaming loop'
-  
+  i_pipe.close()
+  o_pipe.close()
   return
 
 
