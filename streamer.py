@@ -16,6 +16,7 @@ limitations under the License.
 """
 
 import os
+import signal
 import time
 import subprocess as sp
 import numpy as np
