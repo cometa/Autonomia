@@ -187,6 +187,8 @@ def video_pipe(telem):
     o_pipe.stdin.write(car.frame.tostring())
     # flush the input buffer
     i_pipe.stdout.flush()
+  print 'exiting streaming loop'
+  
   return
 
 
@@ -210,11 +212,7 @@ def video_stop():
     sp.check_call(s, shell=True, stderr=FNULL) 
   except Exception, e:
     # fails when no ffmpeg is running
-    if config['app_params']['verbose']: 
-      log("Error stopping streamer. %s" % e)
-    else:
-      pass
-
+    log("Error stopping streamer. %s" % e)
   return
 
 #------------------------------------------------------------------
