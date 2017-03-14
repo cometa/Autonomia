@@ -16,12 +16,14 @@ limitations under the License.
 """
 
 import os
+import signal
 import time
 import subprocess as sp
 import numpy as np
 import cv2
 import json
 import time
+import threading
 
 # filename to fetch telemetry from -- updated atomically by the controller loop at 30 Hz
 TELEMFNAME = '/tmpfs/meta.txt'
@@ -37,6 +39,7 @@ camera=None
 car=None
 
 streaming=False
+video_thread=None
 
 def init(conf, logger):
   global config, log, camera
@@ -65,32 +68,146 @@ def init(conf, logger):
 
   return camera
 
-def video_stop():
-  """ Stop running video capture streamer """
+def video_start(telem):
+  """
+  The video is streamed with a pipeline:
+     camera -> ffmpeg to stdout -> each frame is read and processed -> stdin into ffmpeg for RTMP push to server
+  the streaming pipeline runs in a separate thread   
+  """
+  global video_thread
 
-  streaming = True
+  video_thread = threading.Thread(target=video_pipe,args=(telem,))
+#  video_thread.streaming = True
+  video_thread.start()
   return
+
+def video_pipe(telem):    
+  global video_thread
 
   try:  
     pname = config['video']['streamer']
   except:
-    log("Error cannot stop the video streamer. Streamer not defined in config.json")
-    return None  
+    log("Error cannot start the video streamer. Streamer not defined in config.json")
+    return None
 
-  s = 'killall ' + pname
-  FNULL = open(os.devnull, 'w')
-  try:
-    # execute and wait for completion
-    sp.check_call(s, shell=True, stderr=FNULL) 
-  except Exception, e:
-    # fails when no ffmpeg is running
-    if config['app_params']['verbose']: 
-      log("Error stopping streamer. %s" % e)
-    else:
-      pass
+  # input ffmpeg command
+  i_command = [ pname,
+            '-r', '30',
+            '-use_wallclock_as_timestamps', '1',
+            '-f', 'v4l2',
+            '-i', '/dev/video0',
+            '-vb','1000k',
+            '-f', 'image2pipe',
+            '-pix_fmt', 'yuyv422',
+            '-vcodec', 'rawvideo', '-']
+  # ffmpeg stdout into a pipe
+  i_pipe = sp.Popen(i_command, stdout = sp.PIPE, bufsize=10**5)
+
+  # output ffmpeg push to the RTMP server
+  url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
+  o_command = [ pname,
+        '-f', 'rawvideo',
+        '-vcodec','rawvideo',
+        '-s', '320x240', # size of one frame
+        '-pix_fmt', 'rgb24', #'yuyv422', rgb24
+        '-r', '30', # frames per second
+        '-i', 'pipe:0', # The imput comes from a pipe
+# to use with standard h264 codec
+#        '-an', # Tells FFMPEG not to expect any audio
+#        '-c:v','libx264',
+#        '-profile:v','main',
+#        '-preset','ultrafast',
+#        '-pix_fmt', 'yuv420p',
+#        '-b:v','1000k',
+# RPI GPU codec
+        '-c:v', 'h264_omx',
+        '-maxrate','768k',
+        '-bufsize','2000k',
+        '-r', '30', # frames per second
+        '-g','60',
+        '-f','flv',
+        url ]
+  # ffmpeg stdin from a pipe
+  o_pipe = sp.Popen(o_command, stdin=sp.PIPE, stderr=sp.PIPE)
+
+  # frame size
+  rows = car.rows
+  cols = car.cols
+  image_size = rows * cols * 2 # *3
+
+  # frame counter -- image frame filenames will have this number once the stored video file is split with ffmpeg
+  count = 1
+  #video_thread = threading.currentThread()
+
+  # telemetry object sent for every frame
+  ret = {}
+  ret['device_id'] = car.serial   # constant for every frame
+
+  # streaming loop
+  while getattr(video_thread, "streaming", True):
+    # read frame bytes from ffmpeg input
+    raw_image = i_pipe.stdout.read(image_size)
+
+    # send telemetry in the capture loop for optimal synchronization
+    if telem:
+      now = int(time.time() * 1000)
+      ret['time'] = str(now)
+      ret['s'] = car.steering
+      ret['t'] = car.throttle
+      ret['c'] = count
+      car.com.send_data(json.dumps(ret))
+
+    # prepare the frame for any processing
+    f = np.fromstring(raw_image, dtype=np.uint8)
+    img = f.reshape(rows, cols, 2)  # 2)
+
+    # lock the frame for use in the controller loop 
+    car.glock.acquire()
+
+    # convert to RGB and assign to car object attribute
+    car.frame =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
+
+    # --- TEST only
+    # draw a center rectangle
+    # cv2.rectangle(car.frame,(130,100),(190,140),(255,0,0),2) 
+    # M = cv2.getRotationMatrix2D((width/2,height/2),180,1)
+    # rotate the image 90 degrees twice and bring back to normal
+    #dst = cv2.warpAffine(car.frame,M,(width,height))
+
+    # print steering and throttle value into the image (for telemetry checking only)
+    s = "%04d: %03d %03d" %  (count, car.steering, car.throttle)
+    cv2.putText(car.frame, s,(5,10), cv2.FONT_HERSHEY_SIMPLEX, .4, (0,255,0), 1) 
+
+    # release the frame lock
+    car.glock.release()
+
+    # frame counter
+    count += 1
+
+    # output the frame to the ffmpeg output process
+    o_pipe.stdin.write(car.frame.tostring())
+    # flush the input buffer
+    i_pipe.stdout.flush()
+    
+  log('exiting streaming loop')
+  # terminate child processes
+  i_pipe.kill()
+  o_pipe.kill()
   return
 
-def __video_start(telem):
+
+def video_stop():
+  """ Stop running video capture streamer """
+  global video_thread
+  video_thread.streaming = False
+  # wait for the thread to finish
+  video_thread.join(5)
+  return
+
+#------------------------------------------------------------------
+
+#old version video_start
+def Xvideo_start(telem):
   """ Start a video streamer """ 
   global config, log, camera
 
@@ -128,98 +245,27 @@ def __video_start(telem):
     pid = sp.Popen(params, stderr=FNULL)
   return pid
 
-def video_start(telem):
+# old video stop
+def Xvideo_stop():
+  """ Stop running video capture streamer """
   try:  
     pname = config['video']['streamer']
   except:
-    log("Error cannot start the video streamer. Streamer not defined in config.json")
-    return None
+    log("Error cannot stop the video streamer. Streamer not defined in config.json")
+    return None  
 
-  i_command = [ pname,
-            '-r', '30',
-            '-use_wallclock_as_timestamps', '1',
-            '-f', 'v4l2',
-            '-i', '/dev/video0',
-            '-vb','1000k',
-            '-f', 'image2pipe',
-            '-pix_fmt', 'yuyv422',
-            '-vcodec', 'rawvideo', '-']
-  i_pipe = sp.Popen(i_command, stdout = sp.PIPE, bufsize=10**5)
-
-  url = 'rtmp://' + config['video']['server'] + ':' + config['video']['port'] + '/src/' + config['video']['key']
-
-  o_command = [ pname,
-        '-f', 'rawvideo',
-        '-vcodec','rawvideo',
-        '-s', '320x240', # size of one frame
-#         '-pix_fmt', 'rgb24',
-        '-pix_fmt', 'rgb24', #'yuyv422', rgb24
-        '-r', '30', # frames per second
-        '-i', 'pipe:0', # The imput comes from a pipe
- 
-#        '-an', # Tells FFMPEG not to expect any audio
-#        '-c:v','libx264',
-#        '-profile:v','main',
-#        '-preset','ultrafast',
-#        '-pix_fmt', 'yuv420p',
-#        '-b:v','1000k',
-
-        '-c:v', 'h264_omx',
-        '-maxrate','768k',
-        '-bufsize','2000k',
-        '-r', '30', # frames per second
-        '-g','60',
-        '-f','flv',
-        url ]
-  o_pipe = sp.Popen(o_command, stdin=sp.PIPE, stderr=sp.PIPE)
-
-
-  width = 320 # 640
-  height = 240 #480
-
-  rows = height
-  cols = width
-
-  image_size = rows * cols * 2 # *3
-  font = cv2.FONT_HERSHEY_SIMPLEX
-
-  count = 1
-  streaming = True
-  ret = {}
-  ret['device_id'] = car.serial
-
-  while streaming:
-    raw_image = i_pipe.stdout.read(image_size)
-    now = int(time.time() * 1000)
-    if telem:
-      ret['time'] = str(now)
-      ret['s'] = car.steering
-      ret['t'] = car.throttle
-      ret['c'] = count
-      car.com.send_data(json.dumps(ret))
-
-    f = np.fromstring(raw_image, dtype=np.uint8)
-    img = f.reshape(rows, cols, 2)  # 2)
-
-    # convert to RGB
-    rgb_img =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
-
-    # draw a center rectangle
-#    cv2.rectangle(rgb_img,(130,100),(190,140),(255,0,0),2) 
-
-    s = "%04d: %03d %03d" %  (count, car.steering, car.throttle)
-    cv2.putText(rgb_img, s,(5,10), font, .4, (0,255,0), 1) 
-#    s = "%04d %d" % (count, now)
-#    cv2.putText(rgb_img, s,(25,50), font, .5, (255,255,0), 1) 
-    count += 1
-  #  M = cv2.getRotationMatrix2D((width/2,height/2),180,1)
-
-    # rotate the image 90 degrees twice and bring back to normal
-  #  dst = cv2.warpAffine(rgb_img,M,(width,height))
-
-    # output the image
-    o_pipe.stdin.write(rgb_img.tostring())
-    i_pipe.stdout.flush()
+  s = 'killall ' + pname
+  FNULL = open(os.devnull, 'w')
+  try:
+    # execute and wait for completion
+    sp.check_call(s, shell=True, stderr=FNULL) 
+  except Exception, e:
+    # fails when no ffmpeg is running
+    if config['app_params']['verbose']: 
+      log("Error stopping streamer. %s" % e)
+    else:
+      pass
+  return
 
 """
 ffmpeg -i ../1488768815.flv  -vcodec rawvideo -pix_fmt yuyv422 -f image2  %03d.raw
