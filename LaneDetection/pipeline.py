@@ -27,25 +27,24 @@ with open('calib_params.p', 'rb') as handle:
     cal_params = pickle.load(handle)
 
 
-camera_calib = cal_params
-src_pts = np.float32([[240, 720], [575, 470], [735, 470], [1200, 720]])
-dst_pts = np.float32([[240, 720], [240, 0], [1200, 0], [1200, 720]])
+camera_calib = calib_params
+src_pts = np.float32([[180, 720], [610, 400], [700, 400], [1300, 720]])
+dst_pts = np.float32([[280, 720], [380, 0], [1000, 0], [1100, 720]])
 transform_matrix = perspective_transform(src_pts, dst_pts)
 gradx_thresh=[25, 255]
 ch_thresh=[50, 255]
-bottom_crop = -40 #front-end car
-sliding_window_specs = {'width': 120, 'n_steps': 10} #number of steps vertical steps of sliding window
-
-buffer_sz = 9
-ym_per_pix = 12/450. # meters per pixel in y dimension
+showMe = 0
+bottom_crop = -100 #front-end car
+sliding_window_specs = {'width': 80, 'n_steps': 7} #number of steps vertical steps of sliding window
+peak_thresh = 20 # if number of hot pixel in window below 50, #consider them as noise and do not attempt to get centroid
+buffer_sz = 5
+ym_per_pix = 12/450 # meters per pixel in y dimension
 xm_per_pix = 3.7/911 # meters per pixel in x dimensio
 
 min_sz = 50
 apply_MDOutlier = False
-MD_thresh = 1.8
-
-lineLeft = Line(buffer_sz=buffer_sz)
-lineRight = Line(buffer_sz=buffer_sz)
+lineLeft = Line(buffer_sz=buffer_sz, showMe=showMe)
+lineRight = Line(buffer_sz=buffer_sz, showMe=showMe)
 alpha = None
 
 def pipeline(image):
@@ -87,17 +86,25 @@ def pipeline(image):
 
     
     #Lane Detection Pipeline
-    #Find starter
-    centroid_starter_right = lineRight.find_starter_centroids(warped_img, x0=warped_img.shape[1]/2, 
-                                                               peak_thresh=peak_thresh)
-    
-    centroid_starter_left = lineLeft.find_starter_centroids(warped_img, x0=0, peak_thresh=peak_thresh)
-
-    # keep record left/right lane hotpixels coordinates x and y
-    log_lineRight = lineRight.run_sliding_window(warped_img, centroid_starter_right['centroid'],
-                                                  sliding_window_specs)
-    log_lineLeft = lineLeft.run_sliding_window(warped_img, centroid_starter_left['centroid'],
-                                                  sliding_window_specs)
+    #Find starter centroid: if no line detected in previous frame, run find_starter otherwise use centroid at step=0 of previous frame
+    if lineRight.line_detected == False:
+        centroid_starter_right = lineRight.find_starter_centroids(warped_img, x0=warped_img.shape[1]/2, 
+                                                               peak_thresh=peak_thresh, showMe=showMe)
+        lineRight.starter_centroid = centroid_starter_right['centroid']
+        lineRight.line_detected = True
+        
+   
+    log_lineRight = lineRight.run_sliding_window(warped_img, lineRight.starter_centroid,
+                                                 sliding_window_specs, showMe=showMe)    
+        
+    if lineLeft.line_detected == False:
+        centroid_starter_left = lineLeft.find_starter_centroids(warped_img, x0=0, peak_thresh=peak_thresh,
+                                                            showMe=showMe)
+        lineLeft.starter_centroid = centroid_starter_left['centroid']
+        lineLeft.line_detected = True
+        
+    log_lineLeft = lineLeft.run_sliding_window(warped_img, lineLeft.starter_centroid,
+                                               sliding_window_specs, showMe=showMe)
     
     if apply_MDOutlier:
         #Remove bi-variate outliers using Mahalanobis Distance
@@ -108,10 +115,18 @@ def pipeline(image):
                        lineLeft.MD_removeOutliers(log_lineLeft['x'], log_lineLeft['y'], MD_thresh)
     
     
+    #add current frame's hotpixels to allx and ally tracker
+    #if no hotpixels, set line_detected to False
     #add this frame' hotpixels to allx and ally tracker
-    lineRight.update_tracker('hotpixels', log_lineRight)
-    lineLeft.update_tracker('hotpixels', log_lineLeft)
-    
+    if len(log_lineRight['x']) !=0:
+        lineRight.update_tracker('hotpixels', log_lineRight)
+    else:
+        lineRight.line_detected = False
+        
+    if len(log_lineLeft['x'])!=0 :
+        lineLeft.update_tracker('hotpixels', log_lineLeft)
+    else:
+        lineLeft.line_detected = False
 
     # use all hotpixels accumulated in allx and ally from the last n frames
     # allx is of the form [[hotpixels frame1], [hotpixels_frame2], ....]

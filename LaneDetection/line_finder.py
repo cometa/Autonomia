@@ -29,7 +29,11 @@ class Line():
                                   'a2':deque([], maxlen=self.buffer_sz)}
         #radius of curvature of the line in m
         self.radOfCurv_tracker = deque([], maxlen=self.buffer_sz)
-        
+	#Track starter centroid
+        self.starter_centroid = None
+	# Track line detection status on current frame
+	self.line_detected = False
+
         
     def MahalanobisDist(self, x, y):
         '''
@@ -153,7 +157,10 @@ class Line():
                 window['x0'] = image.shape[1] - sliding_window_specs['width']
             
             centroid, peak_intensity, hotpixels_cnt = self.find_centroid(image, peak_thresh, window)
-            
+	    #save starter centroid for next frame 		
+            if step == 0:
+                self.starter_centroid = centroid
+
             #if >60% of window area is filled by hotpixels, increase window width
             if hotpixels_cnt/(window['width']*window['height']) > 0.6:
                 window['width']= window['width']*2
