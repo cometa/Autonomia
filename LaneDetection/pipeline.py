@@ -24,7 +24,7 @@ def perspective_transform(src_pts, dst_pts):
 
 #load camera calibration
 with open('calib_params.p', 'rb') as handle:
-    cal_params = pickle.load(handle)
+    calib_params = pickle.load(handle)
 
 
 camera_calib = calib_params
