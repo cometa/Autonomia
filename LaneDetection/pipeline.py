@@ -36,8 +36,8 @@ bottom_crop = -100 #front-end car
 sliding_window_specs = {'width': 80, 'n_steps': 7} #number of steps vertical steps of sliding window
 peak_thresh = 20 # if number of hot pixel in window below 50, #consider them as noise and do not attempt to get centroid
 buffer_sz = 5
-ym_per_pix = 12/450 # meters per pixel in y dimension
-xm_per_pix = 3.7/911 # meters per pixel in x dimensio
+ym_per_pix = 12./450. # meters per pixel in y dimension
+xm_per_pix = 3.7/911. # meters per pixel in x dimensio
 
 min_sz = 50
 apply_MDOutlier = False
