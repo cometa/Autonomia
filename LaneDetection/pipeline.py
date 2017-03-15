@@ -33,7 +33,6 @@ dst_pts = np.float32([[280, 720], [380, 0], [1000, 0], [1100, 720]])
 transform_matrix = perspective_transform(src_pts, dst_pts)
 gradx_thresh=[25, 255]
 ch_thresh=[50, 255]
-showMe = 0
 bottom_crop = -100 #front-end car
 sliding_window_specs = {'width': 80, 'n_steps': 7} #number of steps vertical steps of sliding window
 peak_thresh = 20 # if number of hot pixel in window below 50, #consider them as noise and do not attempt to get centroid
@@ -43,8 +42,8 @@ xm_per_pix = 3.7/911 # meters per pixel in x dimensio
 
 min_sz = 50
 apply_MDOutlier = False
-lineLeft = Line(buffer_sz=buffer_sz, showMe=showMe)
-lineRight = Line(buffer_sz=buffer_sz, showMe=showMe)
+lineLeft = Line(buffer_sz=buffer_sz)
+lineRight = Line(buffer_sz=buffer_sz)
 alpha = None
 
 def pipeline(image):
@@ -89,22 +88,20 @@ def pipeline(image):
     #Find starter centroid: if no line detected in previous frame, run find_starter otherwise use centroid at step=0 of previous frame
     if lineRight.line_detected == False:
         centroid_starter_right = lineRight.find_starter_centroids(warped_img, x0=warped_img.shape[1]/2, 
-                                                               peak_thresh=peak_thresh, showMe=showMe)
+                                                               peak_thresh=peak_thresh)
         lineRight.starter_centroid = centroid_starter_right['centroid']
         lineRight.line_detected = True
         
    
     log_lineRight = lineRight.run_sliding_window(warped_img, lineRight.starter_centroid,
-                                                 sliding_window_specs, showMe=showMe)    
+                                                 sliding_window_specs)    
         
     if lineLeft.line_detected == False:
-        centroid_starter_left = lineLeft.find_starter_centroids(warped_img, x0=0, peak_thresh=peak_thresh,
-                                                            showMe=showMe)
+        centroid_starter_left = lineLeft.find_starter_centroids(warped_img, x0=0, peak_thresh=peak_thresh)
         lineLeft.starter_centroid = centroid_starter_left['centroid']
         lineLeft.line_detected = True
         
-    log_lineLeft = lineLeft.run_sliding_window(warped_img, lineLeft.starter_centroid,
-                                               sliding_window_specs, showMe=showMe)
+    log_lineLeft = lineLeft.run_sliding_window(warped_img, lineLeft.starter_centroid, sliding_window_specs)
     
     if apply_MDOutlier:
         #Remove bi-variate outliers using Mahalanobis Distance
