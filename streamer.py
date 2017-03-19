@@ -190,10 +190,10 @@ def video_pipe(telem):
     o_pipe.stdin.write(car.frame.tostring())
 
     # crop image
-    Y = car.frame[cnn_config.img_yaxis_start:cnn_config.img_yaxis_end + 1, cnn_config.img_xaxis_start:cnn_config.img_xaxis_end + 1]
+#    Y = car.frame[cnn_config.img_yaxis_start:cnn_config.img_yaxis_end + 1, cnn_config.img_xaxis_start:cnn_config.img_xaxis_end + 1]
 
     # resample image 
-    Y = cv2.resize(Y, cnn_config.img_resample_dim) #, cv2.INTER_LINEAR)
+#    Y = cv2.resize(Y, cnn_config.img_resample_dim) #, cv2.INTER_LINEAR)
 
     # Y is of shape (1,:,:,:)
     # reduce planes to 1 then proceed
