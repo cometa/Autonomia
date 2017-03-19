@@ -128,7 +128,10 @@ def video_pipe(telem):
         '-f','flv',
         url ]
   # ffmpeg stdin from a pipe
-  o_pipe = sp.Popen(o_command, stdin=sp.PIPE, stderr=sp.PIPE)
+  try:
+    o_pipe = sp.Popen(o_command, stdin=sp.PIPE, stderr=sp.PIPE)
+  except Exception, e:
+    print e
 
   # frame size
   rows = car.rows
