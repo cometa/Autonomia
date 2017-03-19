@@ -363,13 +363,20 @@ class RCVehicle(object):
       elif self.state == States.RUNNING and self.mode == Modes.AUTO:
         # predict steering and trhottle and set the values at a rate depending on preditiction speed
         start_t = time.time()
-        Y = utils.read_uyvy(FRAMEFNAME, cnn_config) # Y is of shape (1, :, :, 1) or (1, :, :, 3)
-        if Y is None:
-          print "image not acquired"
-          continue
+
+#        Y = utils.read_uyvy(FRAMEFNAME, cnn_config) # Y is of shape (1, :, :, 1) or (1, :, :, 3)
+#        if Y is None:
+#          print "image not acquired"
+#          continue
+# Y is of shape (1, :, :, 1) or (1, :, :, 3)
+
+        car.glock.acquire()
+        Y = car.frame
 
         # predict steering and throttle
         s, t = self.model.predict(Y[0:1])
+        car.glock.release()
+
         self.steering = np.argmax(s[0])
         self.throttle = np.argmax(t[0])
 

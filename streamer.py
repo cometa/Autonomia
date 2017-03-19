@@ -25,6 +25,8 @@ import json
 import time
 import threading
 
+from config import DataConfig
+
 # filename to fetch telemetry from -- updated atomically by the controller loop at 30 Hz
 TELEMFNAME = '/tmpfs/meta.txt'
 
@@ -34,6 +36,8 @@ FRAMEFNAME = '/tmpfs/frame.yuv'
 log=None
 config=None
 camera=None
+
+cnn_config = DataConfig()
 
 # Vehicle object instantiated in the application module
 car=None
@@ -177,20 +181,36 @@ def video_pipe(telem):
     # rotate the image 90 degrees twice and bring back to normal
     #dst = cv2.warpAffine(car.frame,M,(width,height))
 
-    # print steering and throttle value into the image (for telemetry checking only)
-    s = "%04d: %03d %03d" %  (count, car.steering, car.throttle)
-    cv2.putText(car.frame, s,(5,10), cv2.FONT_HERSHEY_SIMPLEX, .4, (0,255,0), 1) 
+    if telem:
+      # print steering and throttle value into the image (for telemetry checking only)
+      s = "%04d: %03d %03d" %  (count, car.steering, car.throttle)
+      cv2.putText(car.frame, s,(5,10), cv2.FONT_HERSHEY_SIMPLEX, .4, (0,255,0), 1) 
+
+    # output the frame to the ffmpeg output process
+    o_pipe.stdin.write(car.frame.tostring())
+
+    # crop image
+    Y = car.frame[cnn_config.img_yaxis_start:cnn_config.img_yaxis_end + 1, cnn_config.img_xaxis_start:cnn_config.img_xaxis_end + 1]
+
+    # resample image 
+    Y = cv2.resize(Y, cnn_config.img_resample_dim) #, cv2.INTER_LINEAR)
+
+    # Y is of shape (1,:,:,:)
+    Y = Y.reshape(1, cnn_config.img_resample_dim[0], cnn_config.img_resample_dim[1], cnn_config.num_channels)
+
+    # cast to float and normalize the image values
+    car.frame = np.empty((rows * cols), dtype=np.float64)
+    car.frame = Y / 127.5 - 1
 
     # release the frame lock
     car.glock.release()
 
     # frame counter
     count += 1
-
-    # output the frame to the ffmpeg output process
-    o_pipe.stdin.write(car.frame.tostring())
     # flush the input buffer
     i_pipe.stdout.flush()
+    # short delay to allow other threads to run
+    time.sleep(0.001)
     
   log('exiting streaming loop')
   # terminate child processes
