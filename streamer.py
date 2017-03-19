@@ -174,6 +174,11 @@ def video_pipe(telem):
     # convert to RGB and assign to car object attribute
     car.frame =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
 
+    # TODO: the car.frame is an RGB image of shape (rows,cols.3)
+    #   it needs to be pre-processed before the lock is released to use by the prediction
+    #   crop, resample, normalize, reshape
+    #
+
     # --- TEST only
     # draw a center rectangle
     # cv2.rectangle(car.frame,(130,100),(190,140),(255,0,0),2) 
@@ -205,6 +210,8 @@ def video_pipe(telem):
     car.frame = Y / 127.5 - 1
     """
 
+    # TODO: insure car.frame is the proper format and shape to use it as input to model prediction
+    #
     # release the frame lock
     car.glock.release()
 
