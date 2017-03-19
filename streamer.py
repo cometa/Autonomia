@@ -196,11 +196,14 @@ def video_pipe(telem):
     Y = cv2.resize(Y, cnn_config.img_resample_dim) #, cv2.INTER_LINEAR)
 
     # Y is of shape (1,:,:,:)
+# reduce planes to 1 then proceed
+"""
     Y = Y.reshape(1, cnn_config.img_resample_dim[0], cnn_config.img_resample_dim[1], cnn_config.num_channels)
 
     # cast to float and normalize the image values
     car.frame = np.empty((rows * cols), dtype=np.float64)
     car.frame = Y / 127.5 - 1
+"""
 
     # release the frame lock
     car.glock.release()
