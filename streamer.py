@@ -172,7 +172,9 @@ def video_pipe(telem):
     car.glock.acquire()
 
     # convert to RGB and assign to car object attribute
-    car.frame =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
+#    car.frame =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
+
+    car.frame =  cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)  # working w camera format yuyv422
 
     # TODO: the car.frame is an RGB image of shape (rows,cols.3)
     #   it needs to be pre-processed before the lock is released to use by the prediction
@@ -195,20 +197,28 @@ def video_pipe(telem):
     o_pipe.stdin.write(car.frame.tostring())
 
     # crop image
+    Y = car.frame[cnn_config.ycrop_range[0]:cnn_config.ycrop_range[1], :,:]
+
+    # resample image 
+    Y = cv2.resize(Y, cnn_config.img_resample_dim) #, cv2.INTER_LINEAR)
+    """
+     # crop image
     Y = car.frame[cnn_config.img_yaxis_start:cnn_config.img_yaxis_end + 1, cnn_config.img_xaxis_start:cnn_config.img_xaxis_end + 1]
 
     # resample image 
     Y = cv2.resize(Y, cnn_config.img_resample_dim) #, cv2.INTER_LINEAR)
+    """
+
 
     # Y is of shape (1,:,:,:)
     # reduce planes to 1 then proceed
-    """
+  
     Y = Y.reshape(1, cnn_config.img_resample_dim[0], cnn_config.img_resample_dim[1], cnn_config.num_channels)
 
     # cast to float and normalize the image values
     car.frame = np.empty((rows * cols), dtype=np.float64)
     car.frame = Y / 127.5 - 1
-    """
+  
 
     # TODO: insure car.frame is the proper format and shape to use it as input to model prediction
     #
