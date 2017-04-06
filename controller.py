@@ -370,12 +370,12 @@ class RCVehicle(object):
 #          continue
 # Y is of shape (1, :, :, 1) or (1, :, :, 3)
 
-        car.glock.acquire()
-        Y = car.frame
+        self.glock.acquire()
+        Y = self.frame
 
         # predict steering and throttle
         s, t = self.model.predict(Y[0:1])
-        car.glock.release()
+        self.glock.release()
 
         self.steering = np.argmax(s[0])
         self.throttle = np.argmax(t[0])
