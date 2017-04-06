@@ -374,14 +374,15 @@ class RCVehicle(object):
         Y = self.frame
 
         # predict steering and throttle
-        s, t = self.model.predict(Y[0:1])
+        s = self.model.predict(Y[0:1])
+
         self.glock.release()
 
-        self.steering = np.argmax(s[0])
-        self.throttle = np.argmax(t[0])
+        self.steering = s
+        self.throttle = 98
 
-        self.steering = utils.bucket2steering(self.steering)
-        self.throttle = utils.bucket2throttle(self.throttle)
+        #self.steering = utils.bucket2steering(self.steering)
+        #self.throttle = utils.bucket2throttle(self.throttle)
 
         # clip the prediction for testing
         if self.throttle > 110:

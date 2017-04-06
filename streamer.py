@@ -218,7 +218,7 @@ def video_pipe(telem):
 
     # cast to float and normalize the image values
     car.frame = np.empty((rows * cols), dtype=np.float64)
-    car.frame = Y / 127.5 - 1
+    car.frame = Y / 255.0 - 0.5
   
 
     # TODO: insure car.frame is the proper format and shape to use it as input to model prediction
