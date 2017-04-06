@@ -378,7 +378,7 @@ class RCVehicle(object):
 
         self.glock.release()
 
-        self.steering = s
+        self.steering = s[0][0] + 90
         self.throttle = 98
 
         #self.steering = utils.bucket2steering(self.steering)
