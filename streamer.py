@@ -213,7 +213,7 @@ def video_pipe(telem):
 
     # Y is of shape (1,:,:,:)
     # reduce planes to 1 then proceed
-  
+    print('*************', Y.shape. cnn_config)
     Y = Y.reshape(1, cnn_config.img_resample_dim[0], cnn_config.img_resample_dim[1], cnn_config.num_channels)
 
     # cast to float and normalize the image values
