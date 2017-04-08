@@ -372,14 +372,15 @@ class RCVehicle(object):
 
         self.glock.acquire()
         Y = self.frame
+        self.glock.release()
 
         # predict steering and throttle
         s = self.model.predict(Y[0:1])
 
-        self.glock.release()
+        #self.glock.release()
 
         self.steering = int(s[0][0] + 90 + 0.5)
-        self.throttle = 99 #98
+        self.throttle = 100 #99 #98
 
         #self.steering = utils.bucket2steering(self.steering)
         #self.throttle = utils.bucket2throttle(self.throttle)
