@@ -175,7 +175,6 @@ def video_pipe(telem):
     car.frame =  cv2.cvtColor(img, cv2.COLOR_YUV2RGB_YUY2)  # working w camera format yuyv422
 
     # here car.frame is RGB
-    car.frame =  cv2.cvtColor(car.frame, cv2.COLOR_BGR2YCR_CB)  # working w camera format yuyv422
 
     # TODO: the car.frame is an RGB image of shape (rows,cols.3)
     #   it needs to be pre-processed before the lock is released to use by the prediction
@@ -197,6 +196,8 @@ def video_pipe(telem):
     # output the frame to the ffmpeg output process
     o_pipe.stdin.write(car.frame.tostring())
 
+    # convert to YUV
+    car.frame =  cv2.cvtColor(car.frame, cv2.COLOR_BGR2YCR_CB)  # working w camera format yuyv422
     # crop image
     Y = car.frame[cnn_config.ycrop_range[0]:cnn_config.ycrop_range[1], :,0]
 

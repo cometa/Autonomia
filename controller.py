@@ -378,8 +378,8 @@ class RCVehicle(object):
 
         self.glock.release()
 
-        self.steering = int(s[0][0] + 90)
-        self.throttle = 98
+        self.steering = int(s[0][0] + 90 + 0.5)
+        self.throttle = 100 #99 #98
 
         #self.steering = utils.bucket2steering(self.steering)
         #self.throttle = utils.bucket2throttle(self.throttle)
@@ -392,9 +392,9 @@ class RCVehicle(object):
           self.throttle = 97
 
         self.output_arduino(self.steering, self.throttle)
-        print self.steering, self.throttle
+        print self.steering, self.throttle, s[0][0]
         dt = time.time() - start_t
-        time.sleep(0.01) #0.034 - max(0.033, dt))
+        time.sleep(0.075) #0.075 #0.01 #0.034 - max(0.033, dt))
         print "execution time:", dt
       #
       # ------------------------------------------------------------
