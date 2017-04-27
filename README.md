@@ -41,15 +41,15 @@ The Arduino Nano receives the throttle and steering inputs from the radio receiv
 
 The main application in `Python` consists of:
 
-1. an implementation of a `JSON/RPC` remote API to control the vehicle from the Vederly cloud
+1. an implementation of a `JSON/RPC` remote API to control the vehicle from the Autonomia cloud
 2. a main car controller loop to operate the car motor and steering servos (through the Arduino interface)
 3. a neural network model in `Keras`, trained end-to-end to predict steering and throttle from images
 
-In parallel to the main application, an `ffmpeg` streamer is sending video to the Vederly cloud for live viewing inside a ground control station (GCS) application, and to store it for CNN training or driving evaluation purposes.
+In parallel to the main application, an `ffmpeg` streamer is sending video to the Autonomia cloud for live viewing inside a ground control station (GCS) application, and to store it for CNN training or driving evaluation purposes.
 
 The CNN training video and telemetry data are acquired with the car controlled manually with the radio RC, and the `ffmpeg` streamer running in training mode, which allows for embedding the current steering and throttle values in the bottom left corner of the video itself. Steering and throttle values are then extracted frame per frame, as part of the data preparation and model training pipeline.
 
-At any time together with live video, telemetry data are also sent at a selectable rate, to the Vederly cloud for use live in the GCS and to store for offline viewing.
+At any time together with live video, telemetry data are also sent at a selectable rate, to the Autonomia cloud for use live in the GCS and to store for offline viewing.
 
 The trained `Keras` model (`Tensorflow` back-end) is loaded at runtime and is evaluated in about 40 milliseconds or less, depending on the number of nodes in the network. The model is evaluating steering and throttle values from a `YUV 4:2:2` encoded frame, acquired by the streamer at 30 fps, and shared in a RAM filesystem. The evaluated steering and throttle are passed to the Arduino controller to set the proper values for the motor and steering servos. In the current implementation, no loopback control mechanism is in place.
 
@@ -69,12 +69,12 @@ Since the CNN training is happening in the cloud, an inexpensive Raspberry PI an
 * [Dependencies](../master/docs/dependencies.md)
 
 ## Cloud Server and API
-The Autonomia application uses Vederly, a video and device management cloud platform for mobility applications, including a two-way message broker for device-to-cloud and cloud-to-device secure communication. It runs on a server in the cloud and it uses HTTPS and secure WebSockets for efficient remote interaction of applications and vehicles.
+The application uses the Autonomia,io a video and device management cloud platform for mobility applications, including a two-way message broker for device-to-cloud and cloud-to-device secure communication. It runs on a server in the cloud and it uses HTTPS and secure WebSockets for efficient remote interaction of applications and vehicles.
 
-The main application manages the connection to the Vederly server as defined in the `config.json` parameters file, streams video using RTMP to the server, and exposes methods for JSON-RPC remote procedure calls to the vehicle. 
+The main application manages the connection to the Autonomia server as defined in the `config.json` parameters file, streams video using RTMP to the server, and exposes methods for JSON-RPC remote procedure calls to the vehicle. 
 
-If you are interested in receiving beta tester credentials and access to a Vederly cloud server for testing the Autonomia software or the cloud API send an email to cometa@visiblenergy.com
->Teams participating to the `DYI Robocars` events can obtain free use of the Vederly server and storage (within limits).
+If you are interested in receiving beta tester credentials and access to a Autonomia cloud server for testing the Autonomia software or the cloud API send an email to info@autonomia.io
+>Teams participating to the `DYI Robocars` events can obtain free use of the Autonomia server and storage (within limits).
 
 ## Credits
 
