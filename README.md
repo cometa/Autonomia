@@ -7,7 +7,7 @@ The car autopilot car software is based on a convolutional neural network, train
 
 **Video from the first test run:**
 
-[![First Test Run](https://img.youtube.com/vi/642uDiZwA44/0.jpg)](https://youtu.be/642uDiZwA44)
+[![First Test Run](https://img.youtube.com/vi/SsrNfRHWoU/0.jpg)](https://youtu.be/SsrNfRHWoU) 
 ## Running Modes
 The Autonomia vehicle has three running modes:
 
