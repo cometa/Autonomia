@@ -127,7 +127,7 @@ def batch_generator(x, y, batch_size, model_img_sz, n_outputs, ycrop_range = [12
   offset = 0
   while True:
     # Initialize X and Y array
-    X = np.zeros((batch_size, *model_img_sz), dtype='float32')
+    X = np.zeros((batch_size, model_img_sz[0], model_img_sz[1]), dtype='float32')
     Y = np.zeros((batch_size, n_outputs), dtype='float32')
     #Generate a batch
     for example in range(batch_size):
@@ -209,7 +209,7 @@ if __name__ == "__main__":
   #callbacks_list = [save_best, early_stop]
   callbacks_list = []
 
-  model = models[config.model]((*img_resample_dim,ch), config.num_buckets, keep_rate=config.keep_rate, reg_fc=config.reg_fc, reg_conv=config.reg_conv, model_type=config.model_type)
+  model = models[config.model]((img_resample_dim[0],img_resample_dim[1],ch), config.num_buckets, keep_rate=config.keep_rate, reg_fc=config.reg_fc, reg_conv=config.reg_conv, model_type=config.model_type)
   print("---------------------------")
   print("model %s is created and compiled\r\n" % config.model)
   print(model.summary())
@@ -250,7 +250,7 @@ if __name__ == "__main__":
   #              nb_epoch=num_epoch, verbose=1, callbacks=callbacks_list)
   
   history = model.fit_generator(batch_generator(X_train, yst_train, batch_size=batch_size, 
-                        model_img_sz=(*img_resample_dim,ch), n_outputs=num_outputs, 
+                        model_img_sz=(img_resample_dim[0], img_resample_dim[1], ch), n_outputs=num_outputs, 
                        ycrop_range= ycrop_range, cspace=cspace, model_type=model_type, run='train'),
                 steps_per_epoch=int(samples_per_epoch),
                 nb_epoch=num_epoch, verbose=1, callbacks=callbacks_list)
@@ -266,7 +266,7 @@ if __name__ == "__main__":
   x_test = x_original[start:start + test_sz]
   print(x_original.shape)
   y_test = yst_original[start:start + test_sz]-90
-  X_test = np.zeros((test_sz, *img_resample_dim, ch), dtype='float32')
+  X_test = np.zeros((test_sz, img_resample_dim[0], img_resample_dim[1], ch), dtype='float32')
   Y_test = np.zeros((test_sz, num_outputs), dtype='float32')
   for index, fname in enumerate(x_test):
     img = cv2.imread(fname)
@@ -315,7 +315,7 @@ if __name__ == "__main__":
   start2 = 200
   x_t = xt_original[start2:start2 + test_sz]
   y_t = yt_original[start2:start2 + test_sz]
-  X_t = np.zeros((test_sz, *img_resample_dim, ch), dtype='float32')
+  X_t = np.zeros((test_sz, img_resample_dim[0],img_resample_dim[1], ch), dtype='float32')
   Y_t = np.zeros((test_sz, num_outputs), dtype='float32')
   for index, fname in enumerate(x_t):
     img = cv2.imread(fname)

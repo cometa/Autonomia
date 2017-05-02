@@ -1,0 +1,3 @@
+Prepare data from images and telemetry (cleaned and with the same number of lines as images)
+
+-- add to Dockerfile: root@3c65f366da3a:~/Devel/Autonomia/ConvNet# pip install sklearn
