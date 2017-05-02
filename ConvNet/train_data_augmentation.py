@@ -241,7 +241,7 @@ def create_model_relu():
 
 
 def create_model_2softmax(img_size):
-    keep_rate = 0.3
+    keep_rate = 0.5
     pool_size = (2, 2)
     img_input = Input(shape = img_size)
     x = Convolution2D(16, 5, 5, subsample=(2, 2), W_regularizer=l2(0.001), border_mode="same", activation='relu')(img_input)
@@ -293,11 +293,39 @@ def create_modelB_2softmax(img_size):
 
     return model
 
+
+
+def create_model_light(img_size):
+    keep_rate = 0.5
+    pool_size = (2, 2)
+    img_input = Input(shape = img_size)
+    x = Convolution2D(8, 5, 5, subsample=(1, 1), border_mode="same", activation='relu')(img_input)
+    x = MaxPooling2D(pool_size=pool_size)(x)
+    #x = Dropout(keep_rate)(x)
+    x = Convolution2D(16, 5, 5, subsample=(1, 1), border_mode="same", activation='relu')(x)
+    x = MaxPooling2D(pool_size=pool_size)(x)
+    x = Convolution2D(32, 4, 4, subsample=(1, 1), border_mode="valid", activation='relu')(x)
+    x = MaxPooling2D(pool_size=pool_size)(x)
+    x = Convolution2D(32, 4, 4, subsample=(1, 1), border_mode="valid", activation='relu')(x)
+    x = MaxPooling2D(pool_size=pool_size)(x)
+    # end of feature detector
+    x = Flatten()(x)
+    x = Dropout(keep_rate)(x)
+    x = Dense(256, activation='relu')(x)
+    x = Dropout(keep_rate)(x)
+    x = Dense(50, activation='relu')(x)
+    x = Dropout(keep_rate)(x)
+    o_st = Dense(num_outputs, activation='softmax', name='o_st')(x)
+    o_thr = Dense(num_outputs, activation='softmax', name='o_thr')(x)
+    model = Model(input=img_input, output=[o_st, o_thr])
+    model.compile(optimizer='adam', loss={'o_st': 'categorical_crossentropy', 'o_thr': 'categorical_crossentropy'}, metrics=['accuracy'])
+
+    return model
+
+
+
 models = {
-  'modelB_2softmax': create_modelB_2softmax,
-  'model_2softmax': create_model_2softmax,
-  'model_relu' : create_model_relu,
-  'model_relu2' : create_model_relu2,  
+  'model_wroscoe_mod': model_wroscoe_mod,
 }
 
 if __name__ == "__main__":

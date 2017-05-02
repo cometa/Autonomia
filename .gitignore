@@ -93,7 +93,8 @@ Arduino/libraries/
 #images datafile (JM machine)
 ConvNet/dataWhiteTrack/*.flv
 ConvNet/dataWhiteTrack/vid01/*.*
-
-
+ConvNet/data
+ConvNet/__pycache__
+ConvNet/.ipynb_checkpoints
 
 

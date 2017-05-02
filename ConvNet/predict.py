@@ -37,7 +37,7 @@ from config import DataConfig
 import utils
 import ntpath
 
-interactive =  False
+interactive =  True
 
 # show an image in a proper scale
 def show_img(img):
@@ -57,21 +57,31 @@ if __name__ == "__main__":
 
   try:
     data_path = os.path.expanduser(sys.argv[1])
-  except Exception, e:
-    print e, "Usage: ./predict.py <DATA-DIR>"
+  except Exception as e:
+    print(e, "Usage: ./predict.py <DATA-DIR>")
     sys.exit(-1)
 
   if not os.path.exists(data_path):
-    print "Directory %s not found." % data_path
+    print("Directory %s not found." % data_path)
     sys.exit(-1)
 
-  # open labels csv file (frame filename, steering, throttle)
-  with open("{}/labels.csv".format(data_path)) as f:
-    labels = f.readlines()
-  nlabels = len(labels)
-  print "found %d labels" % nlabels
+  log = np.load('log.npy')
+  model = model_from_json(open("{}/autonomia_cnn.json".format(data_path)).read())
+  # Load model weights
+  model.load_weights("{}/autonomia_cnn.h5".format(data_path))
+  model.summary()
 
-  out_file = open("{}/labels_pred.csv".format(data_path), 'w')
+  img_height, img_width, num_channels = config.img_resample_dim[0], config.img_resample_dim[1], config.num_channels
+  skip = config.skip_ahead
+
+
+  # open labels csv file (frame filename, steering, throttle)
+  #with open("{}/labels.csv".format(data_path)) as f:
+    #labels = f.readlines()
+  #nlabels = len(labels)
+  #print("found %d labels" % nlabels)
+
+  #out_file = open("{}/labels_pred.csv".format(data_path), 'w')
 
   # Load model structure
 
@@ -83,6 +93,63 @@ if __name__ == "__main__":
 
   img_height, img_width, num_channels = config.img_resample_dim[0], config.img_resample_dim[1], config.num_channels
   skip = config.skip_ahead
+
+  for i in range(len(log)):
+    if i < skip:
+      continue
+    filename, steering, throttle= log[i][0], log[i][1], log[i][2]
+    print('***************** {} | {} | {}'.format(filename, steering, throttle))
+    steering = int(steering)
+    # throttle
+    throttle = int(throttle)
+    print(filename, steering, throttle)
+    # load image
+    img = cv2.imread(filename)
+    # convert to YCrCb
+    gray_img =  cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)  
+
+    if num_channels == 1:
+      # extract and use Y plane only
+      X_img, _, _ = cv2.split(gray_img)
+    else:
+      # use YCrCb
+      X_img = gray_img
+
+    if interactive: show_img(X_img)
+
+    # crop image
+    X_img = X_img[config.ycrop_range[0]:config.ycrop_range[1], :]
+
+    # resample image 
+    X_img = cv2.resize(X_img, config.img_resample_dim[::-1] , cv2.INTER_LINEAR)
+
+    # X_img is of shape (1,:,:,:)
+    X_img = X_img.reshape(1, img_height, img_width, num_channels)
+
+    # normalize the image values
+    X_img = X_img / 255.0 - 0.5
+
+    now = time.time()
+    # predict steering and throttle
+    steering = model.predict(X_img)
+    t = time.time() - now
+    print("execution time:", t)
+#    steering = np.argmax(p[:, :15],  1)
+#    throttle = np.argmax(p[:, 15:], 1)
+#    print p[0, :15]
+#    print p[0, 15:]
+
+    steering = steering + 90
+    
+    print(steering)
+    #out_file.write("%s,%d\n" % (ntpath.basename(filename), steering))
+
+    if interactive: 
+      key = cv2.waitKey(0)
+      if key == 27:
+          sys.exit(0)
+'''
+
 
   for i,line in enumerate(labels):
     if i < skip:
@@ -146,3 +213,4 @@ if __name__ == "__main__":
       key = cv2.waitKey(0)
       if key == 27:
           sys.exit(0)
+'''

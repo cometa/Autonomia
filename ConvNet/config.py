@@ -13,7 +13,8 @@ class DataConfig(object):
     img_yaxis_start = 140
     img_yaxis_end = 227
     img_height = img_yaxis_end - img_yaxis_start + 1
-    ycrop_range = [140, -20]
+    #ycrop_range = [140, -20] Gina
+    ycrop_range = [90, -20] #lola
     # image x-axis cropping
     img_xaxis_start = 0
     img_xaxis_end = 319

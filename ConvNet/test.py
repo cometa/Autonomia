@@ -34,21 +34,21 @@ def read_uyvy(filename, config, rows=240, cols=320):
 
     # TODO: support for three channels YUV
     f = f.reshape((rows * cols / 2), 4)
-    Y = np.empty((rows * cols), dtype=np.uint8)
-    Y[0::2] = f[:,0]
+    Y_channel = np.empty((rows * cols), dtype=np.uint8)
+    Y_channel[0::2] = f[:,0]
     Y[1::2] = f[:,2]
     Y = Y.reshape(rows, cols)
     # TODO: Y is only the Y plane
 
     # crop image
-    Y = Y[config.img_yaxis_start:config.img_yaxis_end + 1, config.img_xaxis_start:config.img_xaxis_end + 1]
+    Y = Y[config.ycrop_range[0]:config.ycrop_range[1], config.img_xaxis_start:config.img_xaxis_end + 1]
 
     # resample image 
     Y = cv2.resize(Y, config.img_resample_dim) #, cv2.INTER_LINEAR)
 
     # convert to float
-    X = np.empty((rows * cols), dtype=np.float64)
-    X = Y / 127.5 - 1
+    X = np.empty((rows * cols), dtype=np.float32)
+    X = Y / 255. - 0.5
 
     return Y, X
 

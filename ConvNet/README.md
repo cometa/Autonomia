@@ -1,6 +1,6 @@
 ## Video Acquisition 
 
-Video is streamed from the car to the Autonomia Cloud server using the RTMP protocol at 30 frames per second, with a 240x320 resolution and H.264 encoding. The streaming is controlled by the `video_start` and `video_stop` JSON/RPC methods.
+Video is streamed from the car to the Vederly Cloud server using the RTMP protocol at 30 frames per second, with a 240x320 resolution and H.264 encoding. The streaming is controlled by the `video_start` and `video_stop` JSON/RPC methods.
 
 To acquire video for CNN training, the `video_start` method must be called with the `{'telem':true}` parameter. With this option, the video generated embeds steering and throttle servo values in the bottom left of each frame. 
 
@@ -12,7 +12,7 @@ To acquire video for CNN training, the `video_start` method must be called with 
 
 > `steering` and `trhottle` values are in the `[0,180]` range with `90` as neutral. This is the values received by the RC radio receiver and captured by the Arduino controller.
 
-Streaming video is automatically ingested and stored in the Autonomia server in `flv` files of 5 minutes length with the filename including the vehicle identifier and an Epoch timestamp in seconds. A video file stored in Autonomia cloud has a name that includes a `camera_key` unique for the vehicle, and an Epoch `timestamp`. For instance: `74DA388EAC61-1482024251.flv`
+Streaming video is automatically ingested and stored in the Vederly server in `flv` files of 5 minutes length with the filename including the vehicle identifier and an Epoch timestamp in seconds. A video file stored in Vederly cloud has a name that includes a `camera_key` unique for the vehicle, and an Epoch `timestamp`. For instance: `74DA388EAC61-1482024251.flv`
 
 ## Preparation Steps
 Once a telemetry video file has been downloaded, the preparation steps are:
