@@ -34,6 +34,8 @@ from keras import callbacks
 from keras.regularizers import l2
 import cnnModels as nnet
 from sklearn.model_selection import train_test_split
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 class DriveLog():
@@ -124,10 +126,13 @@ def batch_generator(x, y, batch_size, model_img_sz, n_outputs, ycrop_range = [12
       save angles of all batches generated 'y_bag.npy
   True as long as total number of examples generated is lower than the number of 'samples_per_epoch' set by user.
   '''
+
+#  import pdb; pdb.set_trace()
+
   offset = 0
   while True:
     # Initialize X and Y array
-    X = np.zeros((batch_size, model_img_sz[0], model_img_sz[1]), dtype='float32')
+    X = np.zeros((batch_size, model_img_sz[0], model_img_sz[1], model_img_sz[2]), dtype='float32')
     Y = np.zeros((batch_size, n_outputs), dtype='float32')
     #Generate a batch
     for example in range(batch_size):
@@ -152,7 +157,7 @@ def batch_generator(x, y, batch_size, model_img_sz, n_outputs, ycrop_range = [12
         Y[example, int(steering_class)] = 1
       else:
         Y[example] = steering
-        
+
     yield (X, Y)
 
     if (offset+batch_size >= len(y)-len(y)%batch_size): 
@@ -162,8 +167,6 @@ def batch_generator(x, y, batch_size, model_img_sz, n_outputs, ycrop_range = [12
       offset = offset + batch_size
     np.save('x_val.npy', X )
     np.save('y_val.npy', Y) #save last batch of images
-
-
 
 
 models = {
@@ -253,6 +256,7 @@ if __name__ == "__main__":
                         model_img_sz=(img_resample_dim[0], img_resample_dim[1], ch), n_outputs=num_outputs, 
                        ycrop_range= ycrop_range, cspace=cspace, model_type=model_type, run='train'),
                 steps_per_epoch=int(samples_per_epoch),
+#                samples_per_epoch=int(samples_per_epoch),
                 nb_epoch=num_epoch, verbose=1, callbacks=callbacks_list)
 
   print("saving model and weights")
@@ -264,7 +268,7 @@ if __name__ == "__main__":
   test_sz = 600
   start = 656
   x_test = x_original[start:start + test_sz]
-  print(x_original.shape)
+#  print(x_original.shape)
   y_test = yst_original[start:start + test_sz]-90
   X_test = np.zeros((test_sz, img_resample_dim[0], img_resample_dim[1], ch), dtype='float32')
   Y_test = np.zeros((test_sz, num_outputs), dtype='float32')
@@ -291,14 +295,16 @@ if __name__ == "__main__":
   else:
     pred_class = pred
   plt.plot(np.arange(0,test_sz, 1), Y_test, 'b-')
-  print(pred_class)
+#  print(pred_class)
   plt.plot(np.arange(0,test_sz, 1), pred_class, 'r-')
   plt.savefig('test_on_trainingset.png')
-  plt.show()
+  print("plot of testing on trainingset in test_on_trainingset.png")
+#  plt.show()
 
-  logfile_test = 'log_test.npy'
-  test_dir = 'data/oakland170418'
-  summary_file = 'data/oakland170418/1492543329.txt'
+"""
+  logfile_test = 'log_test.npy'     #MEG: where is this coming from?
+  test_dir = 'data/oakland170418'   #MEG: is the test_dir different from data_path?
+#  summary_file = 'data/oakland170418/1492543329.txt'
   files_log = glob.glob('*.npy')
   if logfile_test in files_log:
     try:
@@ -343,10 +349,10 @@ if __name__ == "__main__":
   plt.savefig('test_on_testset.png')
   plt.show()
 
-
+"""
  
 
 #clear session to avoid error at the end of program: "AttributeError: 'NoneType' object has no attribute 'TF_DeleteStatus'"
     # The alternative does not work: import gc; gc.collect()
     # https://github.com/tensorflow/tensorflow/issues/3388
-  K.clear_session()
+K.clear_session()
