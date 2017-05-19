@@ -18,15 +18,14 @@ The Autonomia vehicle has three running modes:
 In any running mode, the vehicle is connected to the Autonomia cloud servers using the [Cometa API](http://www.cometa.io/cometa-api.html). It is also remotely managed and responding to the commands in the JSON/RPC Remote API, as well streaming telemetry and live video from the on-board camera to the Autonomia cloud managemengt platform.
 
 ## Hardware
-The hardware added to a commercial 1/10 scale RC car, such as our first car "Gina" [Traxxas Stampede]
-(https://traxxas.com/products/models/electric/36054-1stampede?t=details) used in the first model, consists of:
+The hardware added to a commercial 1/10 scale RC car, such as our first car "Gina", a [Traxxas Stampede](https://traxxas.com/products/models/electric/36054-1stampede?t=details), consists of:
 
 1. [Raspberry PI 3 model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) with a 8GB SD card
 2. [Arduino Nano](https://www.arduino.cc/en/Main/arduinoBoardNano)
 3. [Logitech C920 camera](http://www.logitech.com/en-us/product/hd-pro-webcam-c920)
 4. DC-DC step-down converter for automotive
 
-Our second car "Lola" is based on the 1/8 scale [Thunder Tiger MT4 G3 4WD Monster Truck] (http://www.thundertiger.com/products-detail.php?id=10&lang=en)
+Our second car "Lola" is based on the 1/8 scale [Thunder Tiger MT4 G3 4WD Monster Truck](http://www.thundertiger.com/products-detail.php?id=10&lang=en)
 
 Optional equipmment:
 
