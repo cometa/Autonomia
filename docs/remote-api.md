@@ -1,8 +1,8 @@
 # Cloud API
 
-Once the Autonomia application is started on the vehicle, it will connect to the Cometa middleware server, the message broker component of the Vederly Cloud API. The application uses as credentials the `app_key` application key specified in the `config.json` file. The connection is kept open permanently and used for full-duplex communication with the vehicle through the Cometa server. 
+Once the Autonomia (application.py) application is started on the RPI in the vehicle, it will connect to the Cometa middleware server, the message broker component of the Autonomia Cloud API. The application uses as credentials the `app_key` application key specified in the `config.json` file. The connection is kept open permanently and used for full-duplex communication with the vehicle through the Cometa server, that is both for telemetry (device2cloud) and remote control (cloud2device). 
 
-Since the connection is initiated from within a NAT or a firewall on stadard port 443, which is typically open for outgoing traffic, the vechicle becomes accessible from an application using the `Autonomia` Cloud API without exposing or even knowing its public IP address.
+Since the connection is initiated from within a NAT or a firewall on stadard port 443, which is typically open for outgoing traffic, the vechicle becomes accessible from an application using the `Autonomia` Cloud API without exposing or even knowing its public IP address. We use regularly a 4G/LTE hotspot from the Oakland warehouse for the connection.
 
 An application that intends to communicate with an Autonomia vehicle, sends `JSON-RPC` requests through the Cometa cloud server `send` method.
 
