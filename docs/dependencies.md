@@ -29,7 +29,10 @@ $ sudo apt-get install libfontconfig1-dev
 $ sudo apt-get install libfribidi0
 $ sudo apt-get install libfribidi-dev
 ```
-
+Install libx264:
+```
+$ sudo apt-get install libx264-142 libx264-dev
+```
 Build `FFmpeg` from repo `https://github.com/FFmpeg/FFmpeg.git`
 
 Enable the `OMX h264` encoder that uses the GPU and add libraries to draw text:
