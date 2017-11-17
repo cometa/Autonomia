@@ -18,7 +18,14 @@ FFmpeg:
 Add `OpenMAX Integration Layer` hardware acceleration support:
 ```
 $ sudo apt-get install liboxmil-bellagio
+or
+$ sudo apt-get install liboxmil-bellagio-dev
 ```
+Install fontconfig:
+```
+$ sudo apt install fontconfig
+```
+
 Build `FFmpeg` from repo `https://github.com/FFmpeg/FFmpeg.git`
 
 Enable the `OMX h264` encoder that uses the GPU and add libraries to draw text:
