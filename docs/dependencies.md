@@ -23,8 +23,9 @@ $ sudo apt-get install liboxmil-bellagio-dev
 ```
 Install fontconfig:
 ```
-$ sudo apt install fontconfig
-$ sudo apt-get install  libfontconfig1-dev
+$ sudo apt-get install fontconfig
+$ sudo apt-get install libfontconfig1-dev
+$ sudo apt-get install libfribidi0
 ```
 
 Build `FFmpeg` from repo `https://github.com/FFmpeg/FFmpeg.git`
